@@ -1,22 +1,29 @@
 import { Router } from 'express';
-import { 
-  getTopics, 
-  createTopic, 
-  getTopic, 
-  updateTopic, 
+import { authenticate, optionalAuthenticate } from '../middleware/auth';
+import {
+  getTopics,
+  createTopic,
+  getTopic,
+  updateTopic,
   deleteTopic,
   joinTopic,
-  leaveTopic
+  leaveTopic,
 } from '../controllers/topicController';
-import { authenticate } from '../middleware/auth';
 
 export const topicRoutes = Router();
 
-topicRoutes.get('/', getTopics);
-topicRoutes.post('/', authenticate, createTopic);
-topicRoutes.get('/:id', getTopic);
-topicRoutes.put('/:id', authenticate, updateTopic);
-topicRoutes.delete('/:id', authenticate, deleteTopic);
-topicRoutes.post('/:id/join', authenticate, joinTopic);
-topicRoutes.post('/:id/leave', authenticate, leaveTopic);
+// GET topics - optional auth (for public browsing)
+topicRoutes.get('/', optionalAuthenticate, getTopics);
+
+// GET single topic - optional auth
+topicRoutes.get('/:id', optionalAuthenticate, getTopic);
+
+// All other routes require authentication
+topicRoutes.use(authenticate);
+
+topicRoutes.post('/', createTopic);
+topicRoutes.put('/:id', updateTopic);
+topicRoutes.delete('/:id', deleteTopic);
+topicRoutes.post('/:id/join', joinTopic);
+topicRoutes.post('/:id/leave', leaveTopic);
 

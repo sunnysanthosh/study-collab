@@ -1,113 +1,186 @@
 'use client';
 
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { authApi, api } from '@/lib/api';
+import { useToast } from './ToastContext';
 
 interface User {
     id: string;
     name: string;
     email: string;
-    avatar?: string;
+    avatar_url?: string;
+    role?: string;
 }
 
 interface AuthContextType {
     user: User | null;
     isAuthenticated: boolean;
     login: (email: string, password: string) => Promise<boolean>;
+    register: (name: string, email: string, password: string) => Promise<boolean>;
     logout: () => void;
     isLoading: boolean;
+    refreshToken: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Test/Demo credentials
-const TEST_USERS = [
-    {
-        id: '1',
-        email: 'test@studycollab.com',
-        password: 'test123',
-        name: 'Test User',
-        avatar: undefined,
-    },
-    {
-        id: '2',
-        email: 'admin@studycollab.com',
-        password: 'admin123',
-        name: 'Admin User',
-        avatar: undefined,
-    },
-    {
-        id: '3',
-        email: 'student@studycollab.com',
-        password: 'student123',
-        name: 'Student User',
-        avatar: undefined,
-    },
-];
-
 export function AuthProvider({ children }: { children: ReactNode }) {
+    const { showToast } = useToast();
     const [user, setUser] = useState<User | null>(null);
+    const [refreshToken, setRefreshToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    // Load user from localStorage on mount
+    // Load user and token from localStorage on mount
     useEffect(() => {
-        const storedUser = localStorage.getItem('studycollab_user');
-        if (storedUser) {
+        const loadStoredAuth = () => {
             try {
-                setUser(JSON.parse(storedUser));
+                const storedUser = localStorage.getItem('studycollab_user');
+                const storedToken = localStorage.getItem('studycollab_token');
+                const storedRefreshToken = localStorage.getItem('studycollab_refresh_token');
+
+                if (storedUser && storedToken) {
+                    setUser(JSON.parse(storedUser));
+                    api.setToken(storedToken);
+                    if (storedRefreshToken) {
+                        setRefreshToken(storedRefreshToken);
+                    }
+                }
             } catch (error) {
-                console.error('Error parsing stored user:', error);
+                console.error('Error loading stored auth:', error);
                 localStorage.removeItem('studycollab_user');
+                localStorage.removeItem('studycollab_token');
+                localStorage.removeItem('studycollab_refresh_token');
+            } finally {
+                setIsLoading(false);
             }
-        }
-        setIsLoading(false);
+        };
+
+        loadStoredAuth();
     }, []);
+
+    // Auto-refresh token when it expires
+    useEffect(() => {
+        if (!refreshToken || !user) return;
+
+        const refreshInterval = setInterval(async () => {
+            try {
+                const response = await authApi.refresh(refreshToken);
+                if (response.data) {
+                    api.setToken(response.data.accessToken);
+                    console.log('Token refreshed successfully');
+                }
+            } catch (error) {
+                console.error('Token refresh failed:', error);
+                // If refresh fails, logout user
+                logout();
+            }
+        }, 14 * 60 * 1000); // Refresh every 14 minutes (token expires in 15)
+
+        return () => clearInterval(refreshInterval);
+    }, [refreshToken, user]);
 
     const login = async (email: string, password: string): Promise<boolean> => {
         setIsLoading(true);
         
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Check test credentials
-        const testUser = TEST_USERS.find(
-            u => u.email === email && u.password === password
-        );
-        
-        if (testUser) {
-            const userData: User = {
-                id: testUser.id,
-                name: testUser.name,
-                email: testUser.email,
-                avatar: testUser.avatar,
-            };
+        try {
+            const response = await authApi.login(email, password);
             
-            setUser(userData);
-            localStorage.setItem('studycollab_user', JSON.stringify(userData));
-            setIsLoading(false);
-            return true;
-        }
-        
-        // Also accept any email with password "demo123" for easy testing
-        if (password === 'demo123') {
-            const userData: User = {
-                id: Date.now().toString(),
-                name: email.split('@')[0],
-                email: email,
-            };
+            if (response.error) {
+                showToast(response.error, 'error');
+                setIsLoading(false);
+                return false;
+            }
             
-            setUser(userData);
-            localStorage.setItem('studycollab_user', JSON.stringify(userData));
+            if (response.data) {
+                const { user: userData, accessToken, refreshToken: newRefreshToken } = response.data;
+                
+                // Store tokens
+                api.setToken(accessToken);
+                setRefreshToken(newRefreshToken);
+                if (typeof window !== 'undefined') {
+                    localStorage.setItem('studycollab_refresh_token', newRefreshToken);
+                }
+                
+                // Store user
+                setUser(userData);
+                if (typeof window !== 'undefined') {
+                    localStorage.setItem('studycollab_user', JSON.stringify(userData));
+                }
+                
+                showToast('Login successful!', 'success');
+                setIsLoading(false);
+                return true;
+            }
+            
             setIsLoading(false);
-            return true;
+            return false;
+        } catch (error: any) {
+            console.error('Login error:', error);
+            showToast('Login failed. Please try again.', 'error');
+            setIsLoading(false);
+            return false;
         }
-        
-        setIsLoading(false);
-        return false;
     };
 
-    const logout = () => {
-        setUser(null);
-        localStorage.removeItem('studycollab_user');
+    const register = async (name: string, email: string, password: string): Promise<boolean> => {
+        setIsLoading(true);
+        
+        try {
+            const response = await authApi.register(name, email, password);
+            
+            if (response.error) {
+                showToast(response.error, 'error');
+                setIsLoading(false);
+                return false;
+            }
+            
+            if (response.data) {
+                const { user: userData, accessToken, refreshToken: newRefreshToken } = response.data;
+                
+                // Store tokens
+                api.setToken(accessToken);
+                setRefreshToken(newRefreshToken);
+                if (typeof window !== 'undefined') {
+                    localStorage.setItem('studycollab_refresh_token', newRefreshToken);
+                }
+                
+                // Store user
+                setUser(userData);
+                if (typeof window !== 'undefined') {
+                    localStorage.setItem('studycollab_user', JSON.stringify(userData));
+                }
+                
+                showToast('Registration successful!', 'success');
+                setIsLoading(false);
+                return true;
+            }
+            
+            setIsLoading(false);
+            return false;
+        } catch (error: any) {
+            console.error('Registration error:', error);
+            showToast('Registration failed. Please try again.', 'error');
+            setIsLoading(false);
+            return false;
+        }
+    };
+
+    const logout = async () => {
+        try {
+            await authApi.logout();
+        } catch (error) {
+            console.error('Logout error:', error);
+        } finally {
+            setUser(null);
+            setRefreshToken(null);
+            api.setToken(null);
+            if (typeof window !== 'undefined') {
+                localStorage.removeItem('studycollab_user');
+                localStorage.removeItem('studycollab_token');
+                localStorage.removeItem('studycollab_refresh_token');
+            }
+            showToast('Logged out successfully', 'success');
+        }
     };
 
     return (
@@ -116,8 +189,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 user,
                 isAuthenticated: !!user,
                 login,
+                register,
                 logout,
                 isLoading,
+                refreshToken,
             }}
         >
             {children}
@@ -132,4 +207,3 @@ export function useAuth() {
     }
     return context;
 }
-

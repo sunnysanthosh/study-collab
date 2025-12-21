@@ -93,7 +93,7 @@ export default function LoginPage() {
                         Sign in to continue your learning journey
                     </p>
                     
-                    {/* Test Credentials Info */}
+                    {/* Info Note */}
                     <div style={{
                         padding: '1rem',
                         background: 'hsl(var(--primary) / 0.1)',
@@ -102,15 +102,15 @@ export default function LoginPage() {
                         marginBottom: '1.5rem',
                         fontSize: '0.85rem'
                     }}>
-                        <div style={{ fontWeight: 600, marginBottom: '0.5rem', color: 'hsl(var(--primary))' }}>
-                            🧪 Test Credentials:
-                        </div>
                         <div style={{ color: 'hsl(var(--muted-foreground))', lineHeight: '1.6' }}>
-                            <div>Email: <strong>test@studycollab.com</strong></div>
-                            <div>Password: <strong>test123</strong></div>
-                            <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', opacity: 0.8 }}>
-                                Or use any email with password: <strong>demo123</strong>
-                            </div>
+                            Don't have an account?{' '}
+                            <Link href="/signup" style={{ 
+                                color: 'hsl(var(--primary))', 
+                                textDecoration: 'none',
+                                fontWeight: 500
+                            }}>
+                                Sign up here
+                            </Link>
                         </div>
                     </div>
                     

@@ -2,38 +2,51 @@
 
 ## 🧪 Test Login Credentials
 
-The application includes test/demo credentials for easy testing without setting up a full authentication system.
+**Note:** With Phase 3 (v0.3), the application now uses real JWT authentication. Test users must be seeded into the database first.
 
-### Pre-configured Test Users
+### Seeding Test Users
+
+Run the seed script to create test users:
+
+```bash
+cd backend/api
+npm run seed
+```
+
+This will create the following test users in the database.
+
+### Pre-configured Test Users (After Seeding)
+
+After running `npm run seed`, these users will be available:
 
 #### Test User 1
 - **Email:** `test@studycollab.com`
-- **Password:** `test123`
+- **Password:** `Test1234!`
 - **Name:** Test User
+- **Role:** user
 - **Access:** Standard user
 
 #### Test User 2 (Admin)
 - **Email:** `admin@studycollab.com`
-- **Password:** `admin123`
+- **Password:** `Admin1234!`
 - **Name:** Admin User
+- **Role:** admin
 - **Access:** Admin privileges (future)
 
 #### Test User 3 (Student)
 - **Email:** `student@studycollab.com`
-- **Password:** `student123`
+- **Password:** `Student1234!`
 - **Name:** Student User
+- **Role:** user
 - **Access:** Standard user
 
-### Universal Demo Login
+### Password Requirements
 
-For quick testing, you can use **any email address** with the password:
-- **Password:** `demo123`
-
-This will create a temporary user with the email you provide.
-
-**Example:**
-- Email: `demo@example.com`
-- Password: `demo123`
+All passwords must meet these requirements:
+- At least 8 characters
+- At least one uppercase letter
+- At least one lowercase letter
+- At least one number
 
 ---
 

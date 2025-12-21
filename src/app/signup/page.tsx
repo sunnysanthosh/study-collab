@@ -3,11 +3,17 @@
 import { Shell } from "@/components/layout/Shell";
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/Input";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import { Button } from "@/components/ui/Button";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/contexts/ToastContext";
 
 export default function SignupPage() {
+    const router = useRouter();
+    const { register } = useAuth();
+    const { showToast } = useToast();
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -53,12 +59,21 @@ export default function SignupPage() {
         if (!validate()) return;
         
         setIsLoading(true);
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        setIsLoading(false);
+        setErrors({});
         
-        // TODO: Implement actual signup logic
-        console.log('Signup:', { name, email, password });
+        try {
+            const success = await register(name, email, password);
+            
+            if (success) {
+                router.push('/topics');
+            } else {
+                // Error is already shown via toast in AuthContext
+            }
+        } catch (error) {
+            showToast('Registration failed. Please try again.', 'error');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (

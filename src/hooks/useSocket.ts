@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { Socket } from 'socket.io-client';
 import { initializeSocket, disconnectSocket, getSocket } from '@/lib/socket';
+import { api } from '@/lib/api';
 
 interface Message {
   id: string;
@@ -11,6 +12,7 @@ interface Message {
   text: string;
   time: string;
   isOwn: boolean;
+  userId?: string;
 }
 
 interface UseSocketProps {
@@ -27,19 +29,53 @@ export function useSocket({ roomId, userId, userName }: UseSocketProps) {
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    const socket = initializeSocket(roomId);
+    const token = api.getToken();
+    if (!token) {
+      console.error('No token available for WebSocket connection');
+      return;
+    }
+
+    const socket = initializeSocket(roomId, token);
     socketRef.current = socket;
 
     socket.on('connect', () => {
       setIsConnected(true);
-      socket.emit('join-room', { roomId, userId, userName });
+      console.log('Socket connected, joining room:', roomId);
     });
 
     socket.on('disconnect', () => {
       setIsConnected(false);
+      console.log('Socket disconnected');
     });
 
-    socket.on('message', (data: { id: string; user: string; avatar: string; text: string; time: string; userId: string }) => {
+    socket.on('connect_error', (error) => {
+      console.error('Socket connection error:', error);
+      setIsConnected(false);
+    });
+
+    // Load message history
+    socket.on('message-history', (data: { messages: any[] }) => {
+      const historyMessages: Message[] = data.messages.map((msg: any) => ({
+        id: msg.id,
+        user: msg.user_name || 'Unknown',
+        avatar: msg.user_avatar || (msg.user_name?.charAt(0).toUpperCase() || '?'),
+        text: msg.content,
+        time: msg.created_at,
+        isOwn: msg.user_id === userId,
+        userId: msg.user_id,
+      }));
+      setMessages(historyMessages);
+    });
+
+    // Handle new messages
+    socket.on('message', (data: { 
+      id: string; 
+      user: string; 
+      avatar: string; 
+      text: string; 
+      time: string; 
+      userId: string;
+    }) => {
       const message: Message = {
         id: data.id,
         user: data.user,
@@ -47,6 +83,7 @@ export function useSocket({ roomId, userId, userName }: UseSocketProps) {
         text: data.text,
         time: data.time,
         isOwn: data.userId === userId,
+        userId: data.userId,
       };
       setMessages((prev) => [...prev, message]);
     });
@@ -71,6 +108,10 @@ export function useSocket({ roomId, userId, userName }: UseSocketProps) {
       setTypingUsers((prev) => prev.filter((name) => name !== data.userName));
     });
 
+    socket.on('error', (error: { message: string }) => {
+      console.error('Socket error:', error.message);
+    });
+
     return () => {
       disconnectSocket();
     };
@@ -84,10 +125,7 @@ export function useSocket({ roomId, userId, userName }: UseSocketProps) {
 
     const message = {
       roomId,
-      userId,
-      userName,
-      text,
-      time: new Date().toISOString(),
+      text: text.trim(),
     };
 
     socketRef.current.emit('message', message);
@@ -96,13 +134,13 @@ export function useSocket({ roomId, userId, userName }: UseSocketProps) {
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
-    socketRef.current.emit('stop-typing', { roomId, userId, userName });
+    socketRef.current.emit('stop-typing', { roomId });
   };
 
   const sendTypingIndicator = () => {
     if (!socketRef.current || !isConnected) return;
 
-    socketRef.current.emit('typing', { roomId, userId, userName });
+    socketRef.current.emit('typing', { roomId });
 
     // Clear existing timeout
     if (typingTimeoutRef.current) {
@@ -111,7 +149,7 @@ export function useSocket({ roomId, userId, userName }: UseSocketProps) {
 
     // Set new timeout to stop typing indicator
     typingTimeoutRef.current = setTimeout(() => {
-      socketRef.current?.emit('stop-typing', { roomId, userId, userName });
+      socketRef.current?.emit('stop-typing', { roomId });
     }, 3000);
   };
 
@@ -123,4 +161,3 @@ export function useSocket({ roomId, userId, userName }: UseSocketProps) {
     sendTypingIndicator,
   };
 }
-

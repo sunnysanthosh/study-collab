@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
 import { useSocket } from '@/hooks/useSocket';
 import { useParams } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Message {
     id: string;
@@ -17,10 +18,10 @@ interface Message {
 export function ChatInterface() {
     const params = useParams();
     const roomId = params.id as string;
+    const { user } = useAuth();
     
-    // TODO: Get from auth context
-    const userId = 'user-123';
-    const userName = 'You';
+    const userId = user?.id || '';
+    const userName = user?.name || user?.email || 'Guest';
     
     const { messages, isConnected, typingUsers, sendMessage, sendTypingIndicator } = useSocket({
         roomId,
@@ -30,13 +31,7 @@ export function ChatInterface() {
     
     const [inputValue, setInputValue] = useState('');
 
-    // Fallback messages if socket not connected
-    const [fallbackMessages] = useState<Message[]>([
-        { id: '1', user: 'Alice', avatar: 'A', text: 'Has anyone solved problem 3?', time: '2m ago', isOwn: false },
-        { id: '2', user: 'You', avatar: 'B', text: 'I think you need to use the chain rule there.', time: 'Just now', isOwn: true },
-    ]);
-
-    const displayMessages = isConnected && messages.length > 0 ? messages : fallbackMessages;
+    const displayMessages = messages;
 
     const handleSend = (e: React.FormEvent) => {
         e.preventDefault();
