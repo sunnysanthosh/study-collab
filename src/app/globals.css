@@ -1,0 +1,136 @@
+:root {
+  /* Brand Colors */
+  --primary: 250 100% 65%; /* Vibrant Purple */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 180 100% 45%; /* Cyan/Teal */
+  --secondary-foreground: 0 0% 0%;
+  --accent: 320 100% 60%; /* Pink/Magenta */
+  --accent-foreground: 0 0% 100%;
+
+  /* Neutral Colors (Dark Mode Default) */
+  --background: 240 10% 4%; /* Very dark blue/grey */
+  --foreground: 0 0% 98%;
+  --card: 240 10% 6%;
+  --card-foreground: 0 0% 98%;
+  --popover: 240 10% 6%;
+  --popover-foreground: 0 0% 98%;
+  --muted: 240 4% 16%;
+  --muted-foreground: 240 5% 65%;
+  --border: 240 4% 16%;
+  --input: 240 4% 16%;
+
+  /* Functional Colors */
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+  --success: 142 76% 36%;
+  --success-foreground: 0 0% 98%;
+  --warning: 38 92% 50%;
+  --warning-foreground: 0 0% 0%;
+
+  /* Radius */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-full: 9999px;
+
+  /* Glassmorphism */
+  --glass-bg: rgba(20, 20, 25, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-blur: 12px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
+}
+
+/* Utilities */
+.container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  outline: none;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  box-shadow: 0 0 20px -5px hsl(var(--primary) / 0.5);
+}
+
+.btn-primary:hover {
+  background-color: hsl(var(--primary) / 0.9);
+  transform: translateY(-1px);
+  box-shadow: 0 0 25px -5px hsl(var(--primary) / 0.6);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: hsl(var(--foreground));
+}
+
+.btn-ghost:hover {
+  background: hsl(var(--muted));
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+h1 { font-size: 3.5rem; }
+h2 { font-size: 2.5rem; }
+h3 { font-size: 2rem; }
+h4 { font-size: 1.5rem; }
+
+/* Grid System */
+.grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+.grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+@media (max-width: 768px) {
+  .grid-cols-2, .grid-cols-3, .grid-cols-4 {
+    grid-template-columns: 1fr;
+  }
+  h1 { font-size: 2.5rem; }
+}
