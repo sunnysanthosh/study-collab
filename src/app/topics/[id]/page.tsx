@@ -1,3 +1,5 @@
+'use client';
+
 import { Shell } from "@/components/layout/Shell";
 import { ChatInterface } from "@/components/collab/ChatInterface";
 import { ProblemBoard } from "@/components/collab/ProblemBoard";

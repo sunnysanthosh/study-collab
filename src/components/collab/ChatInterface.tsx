@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
+import { useSocket } from '@/hooks/useSocket';
+import { useParams } from 'next/navigation';
 
 interface Message {
     id: string;
@@ -13,20 +15,62 @@ interface Message {
 }
 
 export function ChatInterface() {
-    const [messages] = useState<Message[]>([
-        { id: '1', user: 'Alice', avatar: 'A', text: 'Has anyone solved problem 3?', time: '2m ago', isOwn: false },
-        { id: '2', user: 'You', avatar: 'B', text: 'I think you need to use the chain rule there.', time: 'Just now', isOwn: true },
-        { id: '3', user: 'Charlie', avatar: 'C', text: 'Great point! That makes sense.', time: '1m ago', isOwn: false },
-    ]);
+    const params = useParams();
+    const roomId = params.id as string;
+    
+    // TODO: Get from auth context
+    const userId = 'user-123';
+    const userName = 'You';
+    
+    const { messages, isConnected, typingUsers, sendMessage, sendTypingIndicator } = useSocket({
+        roomId,
+        userId,
+        userName,
+    });
     
     const [inputValue, setInputValue] = useState('');
+
+    // Fallback messages if socket not connected
+    const [fallbackMessages] = useState<Message[]>([
+        { id: '1', user: 'Alice', avatar: 'A', text: 'Has anyone solved problem 3?', time: '2m ago', isOwn: false },
+        { id: '2', user: 'You', avatar: 'B', text: 'I think you need to use the chain rule there.', time: 'Just now', isOwn: true },
+    ]);
+
+    const displayMessages = isConnected && messages.length > 0 ? messages : fallbackMessages;
 
     const handleSend = (e: React.FormEvent) => {
         e.preventDefault();
         if (inputValue.trim()) {
-            // TODO: Send message via WebSocket or API
-            console.log('Sending message:', inputValue);
+            if (isConnected) {
+                sendMessage(inputValue);
+            } else {
+                console.log('Socket not connected, using fallback:', inputValue);
+            }
             setInputValue('');
+        }
+    };
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setInputValue(e.target.value);
+        if (isConnected && e.target.value.trim()) {
+            sendTypingIndicator();
+        }
+    };
+
+    const formatTime = (timeString: string) => {
+        try {
+            const date = new Date(timeString);
+            const now = new Date();
+            const diff = now.getTime() - date.getTime();
+            const minutes = Math.floor(diff / 60000);
+            
+            if (minutes < 1) return 'Just now';
+            if (minutes < 60) return `${minutes}m ago`;
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return `${hours}h ago`;
+            return date.toLocaleDateString();
+        } catch {
+            return timeString;
         }
     };
 
@@ -41,16 +85,23 @@ export function ChatInterface() {
             }}>
                 <div>
                     <h3 style={{ fontSize: '1.1rem', margin: 0, marginBottom: '0.25rem' }}>Live Chat</h3>
-                    <span style={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))' }}>
-                        {messages.length} {messages.length === 1 ? 'message' : 'messages'}
-                    </span>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                        <span style={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))' }}>
+                            {displayMessages.length} {displayMessages.length === 1 ? 'message' : 'messages'}
+                        </span>
+                        {isConnected ? (
+                            <span style={{ fontSize: '0.75rem', color: 'hsl(var(--success))' }}>• Connected</span>
+                        ) : (
+                            <span style={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))' }}>• Offline</span>
+                        )}
+                    </div>
                 </div>
                 <div style={{ 
                     width: '8px', 
                     height: '8px', 
-                    background: 'hsl(var(--success))', 
+                    background: isConnected ? 'hsl(var(--success))' : 'hsl(var(--muted-foreground))', 
                     borderRadius: '50%',
-                    animation: 'pulse 2s ease-in-out infinite'
+                    animation: isConnected ? 'pulse 2s ease-in-out infinite' : 'none'
                 }} />
             </div>
 
@@ -63,7 +114,7 @@ export function ChatInterface() {
                 gap: '1rem',
                 minHeight: 0
             }}>
-                {messages.map((message) => (
+                {displayMessages.map((message) => (
                     <div 
                         key={message.id}
                         style={{ 
@@ -95,13 +146,13 @@ export function ChatInterface() {
                             flexDirection: 'column',
                             alignItems: message.isOwn ? 'flex-end' : 'flex-start'
                         }}>
-                            <div style={{ 
-                                fontSize: '0.8rem', 
-                                color: 'hsl(var(--muted-foreground))',
-                                marginBottom: '0.25rem'
-                            }}>
-                                {message.user} • {message.time}
-                            </div>
+                        <div style={{ 
+                            fontSize: '0.8rem', 
+                            color: 'hsl(var(--muted-foreground))',
+                            marginBottom: '0.25rem'
+                        }}>
+                            {message.user} • {formatTime(message.time)}
+                        </div>
                             <div style={{ 
                                 background: message.isOwn ? 'hsl(var(--primary))' : 'hsl(var(--muted))', 
                                 color: message.isOwn ? 'white' : 'hsl(var(--foreground))',
@@ -116,6 +167,33 @@ export function ChatInterface() {
                         </div>
                     </div>
                 ))}
+                {typingUsers.length > 0 && (
+                    <div style={{ 
+                        display: 'flex', 
+                        gap: '0.75rem',
+                        alignItems: 'center',
+                        padding: '0.5rem 0',
+                        color: 'hsl(var(--muted-foreground))',
+                        fontSize: '0.85rem',
+                        fontStyle: 'italic'
+                    }}>
+                        <div style={{ 
+                            width: '36px', 
+                            height: '36px', 
+                            borderRadius: '50%', 
+                            background: 'hsl(var(--muted))', 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center', 
+                            fontSize: '0.9rem', 
+                            fontWeight: 'bold',
+                            flexShrink: 0
+                        }}>
+                            ...
+                        </div>
+                        <span>{typingUsers.join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing...</span>
+                    </div>
+                )}
             </div>
 
             <form 
@@ -131,7 +209,7 @@ export function ChatInterface() {
                     type="text"
                     placeholder="Type a message..."
                     value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
+                    onChange={handleInputChange}
                     style={{
                         flex: 1,
                         padding: '0.75rem 1rem',

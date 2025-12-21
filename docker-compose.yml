@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
+      - NEXT_PUBLIC_SOCKET_URL=http://localhost:3002
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - api
+      - websocket
+
+  api:
+    build:
+      context: ./backend/api
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - DATABASE_URL=postgresql://studycollab:studycollab@db:5432/studycollab
+      - JWT_SECRET=your-secret-key-change-in-production
+      - FRONTEND_URL=http://localhost:3000
+    volumes:
+      - ./backend/api:/app
+      - /app/node_modules
+    depends_on:
+      - db
+
+  websocket:
+    build:
+      context: ./backend/websocket
+      dockerfile: Dockerfile
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=development
+      - PORT=3002
+      - FRONTEND_URL=http://localhost:3000
+    volumes:
+      - ./backend/websocket:/app
+      - /app/node_modules
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=studycollab
+      - POSTGRES_USER=studycollab
+      - POSTGRES_PASSWORD=studycollab
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+
