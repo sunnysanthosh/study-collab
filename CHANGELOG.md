@@ -5,6 +5,92 @@ All notable changes to StudyCollab will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2024-12-21
+
+### Added
+- **Complete Database Integration**
+  - PostgreSQL database with full schema
+  - Database migrations system (`npm run migrate`)
+  - Connection pooling and error handling
+  - All data persisted to database
+
+- **Real Authentication System**
+  - JWT token generation and verification
+  - Password hashing with bcrypt (12 salt rounds)
+  - User registration with validation
+  - Login with credential verification
+  - Token refresh mechanism (15min access, 7day refresh)
+  - Authentication middleware for protected routes
+
+- **WebSocket Message Persistence**
+  - Messages saved to database
+  - Message history loading on room join
+  - User membership verification
+  - Real-time message synchronization
+
+- **Frontend-Backend Integration**
+  - API client utility (`src/lib/api.ts`)
+  - AuthContext with real API integration
+  - Auto token refresh (every 14 minutes)
+  - All pages integrated with backend
+  - Real-time messaging with persistence
+
+- **Demo Mode**
+  - Enhanced seed script (`backend/api/src/db/seed.ts`) - **Preserved**
+  - Auto-seeding on startup (DEMO_MODE=true)
+  - Reset script (`backend/api/src/db/reset-demo.ts`) - **Preserved**
+  - Demo startup script (`scripts/start-demo.sh`) - **Preserved**
+  - 5 test users, 6 demo topics, sample messages
+  - Comprehensive demo data
+
+- **Database Models**
+  - User model with CRUD operations
+  - Topic model with filtering
+  - Message model with history
+  - TopicMember model for membership
+
+- **API Endpoints**
+  - `/api/auth/register` - User registration
+  - `/api/auth/login` - User login
+  - `/api/auth/refresh` - Token refresh
+  - `/api/auth/logout` - User logout
+  - `/api/users/profile` - Get/update profile
+  - `/api/topics` - List/create topics
+  - `/api/topics/:id` - Topic operations
+  - `/api/messages` - Message operations
+
+- **Comprehensive Documentation**
+  - `PHASE_3_JOURNAL.md` - Complete Phase 3 documentation
+  - `END_TO_END_TEST.md` - Comprehensive testing guide
+  - `TESTING_WALKTHROUGH.md` - Quick testing reference
+  - `QUICK_TEST_GUIDE.md` - Step-by-step guide
+  - `TEST_NOW.md` - Immediate testing steps
+  - `DEMO_MODE.md` - Demo mode guide
+  - `VERSION_v0.4.md` - Release notes
+
+### Changed
+- Replaced test authentication with real JWT authentication
+- All mock data replaced with database queries
+- Frontend now uses real API endpoints
+- WebSocket connections require JWT authentication
+- Provider order fixed (ToastProvider wraps AuthProvider)
+
+### Security
+- Password strength validation (8+ chars, uppercase, lowercase, number)
+- SQL injection prevention (parameterized queries)
+- JWT token expiration and refresh
+- Protected routes with authentication middleware
+- Membership verification for messaging
+- Creator-only topic updates/deletes
+
+### Seed Scripts (Preserved for Future Use)
+- `backend/api/src/db/seed.ts` - Comprehensive seeding script
+- `backend/api/src/db/reset-demo.ts` - Demo data reset script
+- `scripts/start-demo.sh` - Demo mode startup script
+- All scripts documented in `DEMO_MODE.md`
+
+---
+
 ## [0.2.0] - 2024-12-21
 
 ### Added
