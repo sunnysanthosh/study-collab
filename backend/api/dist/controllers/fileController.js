@@ -40,6 +40,9 @@ exports.deleteFileAttachment = exports.getFile = exports.uploadAvatar = exports.
 const fileStorage_1 = require("../utils/fileStorage");
 const FileAttachment_1 = require("../models/FileAttachment");
 const path_1 = __importDefault(require("path"));
+const logger_1 = require("../utils/logger");
+const errorHandler_1 = require("../middleware/errorHandler");
+const errorTracker_1 = require("../utils/errorTracker");
 // Upload middleware
 exports.uploadMiddleware = fileStorage_1.upload.single('file');
 // Upload file
@@ -66,8 +69,10 @@ const uploadFile = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('File upload error:', error);
-        res.status(500).json({ error: 'Failed to upload file' });
+        errorTracker_1.ErrorTracker.trackFileError(error, req.file?.originalname, {
+            userId: req.user?.userId,
+        });
+        throw new errorHandler_1.CustomError('Failed to upload file', 500, 'FILE_UPLOAD_ERROR');
     }
 };
 exports.uploadFile = uploadFile;
@@ -95,8 +100,11 @@ const uploadAvatar = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Avatar upload error:', error);
-        res.status(500).json({ error: 'Failed to upload avatar' });
+        errorTracker_1.ErrorTracker.trackFileError(error, req.file?.originalname, {
+            userId: req.user?.userId,
+            type: 'avatar',
+        });
+        throw new errorHandler_1.CustomError('Failed to upload avatar', 500, 'AVATAR_UPLOAD_ERROR');
     }
 };
 exports.uploadAvatar = uploadAvatar;
@@ -106,14 +114,14 @@ const getFile = async (req, res) => {
         const filePath = path_1.default.join(process.cwd(), 'uploads', req.params.type || 'general', req.params.filename);
         res.sendFile(filePath, (err) => {
             if (err) {
-                console.error('File serve error:', err);
+                (0, logger_1.logError)(err, { context: 'File serve', filePath });
                 res.status(404).json({ error: 'File not found' });
             }
         });
     }
     catch (error) {
-        console.error('Get file error:', error);
-        res.status(500).json({ error: 'Failed to get file' });
+        (0, logger_1.logError)(error, { context: 'Get file', filePath: req.params.filename });
+        throw new errorHandler_1.CustomError('Failed to get file', 500, 'FILE_GET_ERROR');
     }
 };
 exports.getFile = getFile;
@@ -132,14 +140,14 @@ const deleteFileAttachment = async (req, res) => {
         res.json({ message: 'File deleted successfully' });
     }
     catch (error) {
-        console.error('Delete file error:', error);
+        (0, logger_1.logError)(error, { context: 'Delete file', fileId: req.params.fileId, userId: req.user?.userId });
         if (error.message === 'Permission denied') {
-            return res.status(403).json({ error: 'Permission denied' });
+            throw new errorHandler_1.CustomError('Permission denied', 403, 'FILE_DELETE_PERMISSION_DENIED');
         }
         if (error.message === 'File attachment not found') {
-            return res.status(404).json({ error: 'File attachment not found' });
+            throw new errorHandler_1.CustomError('File attachment not found', 404, 'FILE_NOT_FOUND');
         }
-        res.status(500).json({ error: 'Failed to delete file' });
+        throw new errorHandler_1.CustomError('Failed to delete file', 500, 'FILE_DELETE_ERROR');
     }
 };
 exports.deleteFileAttachment = deleteFileAttachment;

@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import { createMessage, getMessagesByTopic, getMessageById, updateMessage, deleteMessage } from '../models/Message';
 import { MessageReactionModel } from '../models/MessageReaction';
 import { FileAttachmentModel } from '../models/FileAttachment';
+import { logError } from '../utils/logger';
+import { CustomError } from '../middleware/errorHandler';
 
 export const getMessages = async (req: Request, res: Response) => {
   try {
@@ -26,8 +28,9 @@ export const getMessages = async (req: Request, res: Response) => {
 
     res.json({ messages: messagesWithExtras });
   } catch (error) {
-    console.error('Get messages error:', error);
-    res.status(500).json({ error: 'Failed to get messages' });
+    const { topicId } = req.params;
+    logError(error as Error, { context: 'Get messages', topicId });
+    throw new CustomError('Failed to get messages', 500, 'GET_MESSAGES_ERROR');
   }
 };
 
@@ -53,8 +56,9 @@ export const postMessage = async (req: Request, res: Response) => {
 
     res.status(201).json({ message });
   } catch (error) {
-    console.error('Post message error:', error);
-    res.status(500).json({ error: 'Failed to post message' });
+    const { topicId } = req.params;
+    logError(error as Error, { context: 'Post message', topicId, userId: req.user?.userId });
+    throw new CustomError('Failed to post message', 500, 'POST_MESSAGE_ERROR');
   }
 };
 
@@ -80,8 +84,9 @@ export const editMessage = async (req: Request, res: Response) => {
 
     res.json({ message });
   } catch (error) {
-    console.error('Edit message error:', error);
-    res.status(500).json({ error: 'Failed to edit message' });
+    const { messageId } = req.params;
+    logError(error as Error, { context: 'Edit message', messageId, userId: req.user?.userId });
+    throw new CustomError('Failed to edit message', 500, 'EDIT_MESSAGE_ERROR');
   }
 };
 
@@ -101,8 +106,9 @@ export const removeMessage = async (req: Request, res: Response) => {
 
     res.json({ message: 'Message deleted successfully' });
   } catch (error) {
-    console.error('Delete message error:', error);
-    res.status(500).json({ error: 'Failed to delete message' });
+    const { messageId } = req.params;
+    logError(error as Error, { context: 'Delete message', messageId, userId: req.user?.userId });
+    throw new CustomError('Failed to delete message', 500, 'DELETE_MESSAGE_ERROR');
   }
 };
 
@@ -128,8 +134,9 @@ export const addReaction = async (req: Request, res: Response) => {
 
     res.json({ reaction });
   } catch (error) {
-    console.error('Add reaction error:', error);
-    res.status(500).json({ error: 'Failed to add reaction' });
+    const { messageId } = req.params;
+    logError(error as Error, { context: 'Add reaction', messageId, userId: req.user?.userId });
+    throw new CustomError('Failed to add reaction', 500, 'ADD_REACTION_ERROR');
   }
 };
 
@@ -140,7 +147,8 @@ export const getReactions = async (req: Request, res: Response) => {
     
     res.json({ reactions });
   } catch (error) {
-    console.error('Get reactions error:', error);
-    res.status(500).json({ error: 'Failed to get reactions' });
+    const { messageId } = req.params;
+    logError(error as Error, { context: 'Get reactions', messageId });
+    throw new CustomError('Failed to get reactions', 500, 'GET_REACTIONS_ERROR');
   }
 };

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
+import '@/utils/errorLogger'; // Initialize frontend error logging
 
 export const metadata: Metadata = {
   title: "StudyCollab",

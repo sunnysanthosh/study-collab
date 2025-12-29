@@ -3,6 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getReactions = exports.addReaction = exports.removeMessage = exports.editMessage = exports.postMessage = exports.getMessages = void 0;
 const Message_1 = require("../models/Message");
 const MessageReaction_1 = require("../models/MessageReaction");
+const logger_1 = require("../utils/logger");
+const errorHandler_1 = require("../middleware/errorHandler");
 const getMessages = async (req, res) => {
     try {
         const { topicId } = req.params;
@@ -23,8 +25,9 @@ const getMessages = async (req, res) => {
         res.json({ messages: messagesWithExtras });
     }
     catch (error) {
-        console.error('Get messages error:', error);
-        res.status(500).json({ error: 'Failed to get messages' });
+        const { topicId } = req.params;
+        (0, logger_1.logError)(error, { context: 'Get messages', topicId });
+        throw new errorHandler_1.CustomError('Failed to get messages', 500, 'GET_MESSAGES_ERROR');
     }
 };
 exports.getMessages = getMessages;
@@ -47,8 +50,9 @@ const postMessage = async (req, res) => {
         res.status(201).json({ message });
     }
     catch (error) {
-        console.error('Post message error:', error);
-        res.status(500).json({ error: 'Failed to post message' });
+        const { topicId } = req.params;
+        (0, logger_1.logError)(error, { context: 'Post message', topicId, userId: req.user?.userId });
+        throw new errorHandler_1.CustomError('Failed to post message', 500, 'POST_MESSAGE_ERROR');
     }
 };
 exports.postMessage = postMessage;
@@ -70,8 +74,9 @@ const editMessage = async (req, res) => {
         res.json({ message });
     }
     catch (error) {
-        console.error('Edit message error:', error);
-        res.status(500).json({ error: 'Failed to edit message' });
+        const { messageId } = req.params;
+        (0, logger_1.logError)(error, { context: 'Edit message', messageId, userId: req.user?.userId });
+        throw new errorHandler_1.CustomError('Failed to edit message', 500, 'EDIT_MESSAGE_ERROR');
     }
 };
 exports.editMessage = editMessage;
@@ -89,8 +94,9 @@ const removeMessage = async (req, res) => {
         res.json({ message: 'Message deleted successfully' });
     }
     catch (error) {
-        console.error('Delete message error:', error);
-        res.status(500).json({ error: 'Failed to delete message' });
+        const { messageId } = req.params;
+        (0, logger_1.logError)(error, { context: 'Delete message', messageId, userId: req.user?.userId });
+        throw new errorHandler_1.CustomError('Failed to delete message', 500, 'DELETE_MESSAGE_ERROR');
     }
 };
 exports.removeMessage = removeMessage;
@@ -113,8 +119,9 @@ const addReaction = async (req, res) => {
         res.json({ reaction });
     }
     catch (error) {
-        console.error('Add reaction error:', error);
-        res.status(500).json({ error: 'Failed to add reaction' });
+        const { messageId } = req.params;
+        (0, logger_1.logError)(error, { context: 'Add reaction', messageId, userId: req.user?.userId });
+        throw new errorHandler_1.CustomError('Failed to add reaction', 500, 'ADD_REACTION_ERROR');
     }
 };
 exports.addReaction = addReaction;
@@ -125,8 +132,9 @@ const getReactions = async (req, res) => {
         res.json({ reactions });
     }
     catch (error) {
-        console.error('Get reactions error:', error);
-        res.status(500).json({ error: 'Failed to get reactions' });
+        const { messageId } = req.params;
+        (0, logger_1.logError)(error, { context: 'Get reactions', messageId });
+        throw new errorHandler_1.CustomError('Failed to get reactions', 500, 'GET_REACTIONS_ERROR');
     }
 };
 exports.getReactions = getReactions;

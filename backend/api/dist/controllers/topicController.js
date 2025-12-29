@@ -37,6 +37,8 @@ exports.leaveTopic = exports.joinTopic = exports.deleteTopic = exports.updateTop
 const TopicModel = __importStar(require("../models/Topic"));
 const TopicMemberModel = __importStar(require("../models/TopicMember"));
 const MessageModel = __importStar(require("../models/Message"));
+const logger_1 = require("../utils/logger");
+const errorHandler_1 = require("../middleware/errorHandler");
 const getTopics = async (req, res) => {
     try {
         const { search, subject, difficulty } = req.query;
@@ -54,7 +56,8 @@ const getTopics = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Get topics error:', error);
+        (0, logger_1.logError)(error, { context: 'Topic operation' });
+        throw new errorHandler_1.CustomError('Operation failed', 500, 'TOPIC_ERROR');
         res.status(500).json({ error: 'Failed to get topics' });
     }
 };
@@ -82,8 +85,8 @@ const createTopic = async (req, res) => {
         res.status(201).json(topic);
     }
     catch (error) {
-        console.error('Create topic error:', error);
-        res.status(500).json({ error: 'Failed to create topic' });
+        (0, logger_1.logError)(error, { context: 'Create topic', userId: req.user?.userId });
+        throw new errorHandler_1.CustomError('Failed to create topic', 500, 'CREATE_TOPIC_ERROR');
     }
 };
 exports.createTopic = createTopic;
@@ -105,8 +108,9 @@ const getTopic = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Get topic error:', error);
-        res.status(500).json({ error: 'Failed to get topic' });
+        const { id } = req.params;
+        (0, logger_1.logError)(error, { context: 'Get topic', topicId: id });
+        throw new errorHandler_1.CustomError('Failed to get topic', 500, 'GET_TOPIC_ERROR');
     }
 };
 exports.getTopic = getTopic;
@@ -129,8 +133,9 @@ const updateTopic = async (req, res) => {
         res.json(updatedTopic);
     }
     catch (error) {
-        console.error('Update topic error:', error);
-        res.status(500).json({ error: 'Failed to update topic' });
+        const { id } = req.params;
+        (0, logger_1.logError)(error, { context: 'Update topic', topicId: id, userId: req.user?.userId });
+        throw new errorHandler_1.CustomError('Failed to update topic', 500, 'UPDATE_TOPIC_ERROR');
     }
 };
 exports.updateTopic = updateTopic;
@@ -153,8 +158,9 @@ const deleteTopic = async (req, res) => {
         res.json({ message: 'Topic deleted successfully' });
     }
     catch (error) {
-        console.error('Delete topic error:', error);
-        res.status(500).json({ error: 'Failed to delete topic' });
+        const { id } = req.params;
+        (0, logger_1.logError)(error, { context: 'Delete topic', topicId: id, userId: req.user?.userId });
+        throw new errorHandler_1.CustomError('Failed to delete topic', 500, 'DELETE_TOPIC_ERROR');
     }
 };
 exports.deleteTopic = deleteTopic;
@@ -174,8 +180,9 @@ const joinTopic = async (req, res) => {
         res.json({ message: 'Joined topic successfully' });
     }
     catch (error) {
-        console.error('Join topic error:', error);
-        res.status(500).json({ error: 'Failed to join topic' });
+        const { id } = req.params;
+        (0, logger_1.logError)(error, { context: 'Join topic', topicId: id, userId: req.user?.userId });
+        throw new errorHandler_1.CustomError('Failed to join topic', 500, 'JOIN_TOPIC_ERROR');
     }
 };
 exports.joinTopic = joinTopic;
@@ -190,8 +197,9 @@ const leaveTopic = async (req, res) => {
         res.json({ message: 'Left topic successfully' });
     }
     catch (error) {
-        console.error('Leave topic error:', error);
-        res.status(500).json({ error: 'Failed to leave topic' });
+        const { id } = req.params;
+        (0, logger_1.logError)(error, { context: 'Leave topic', topicId: id, userId: req.user?.userId });
+        throw new errorHandler_1.CustomError('Failed to leave topic', 500, 'LEAVE_TOPIC_ERROR');
     }
 };
 exports.leaveTopic = leaveTopic;

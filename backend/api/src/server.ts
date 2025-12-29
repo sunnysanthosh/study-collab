@@ -3,14 +3,17 @@ import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import { errorHandler } from './middleware/errorHandler';
+import { requestLogger } from './middleware/requestLogger';
 import { authRoutes } from './routes/auth';
 import { userRoutes } from './routes/users';
 import { topicRoutes } from './routes/topics';
 import { messageRoutes } from './routes/messages';
 import { fileRoutes } from './routes/files';
 import { notificationRoutes } from './routes/notifications';
+import { logRoutes } from './routes/logs';
 import pool from './db/connection';
 import path from 'path';
+import logger, { logInfo, logError } from './utils/logger';
 
 dotenv.config();
 
@@ -25,6 +28,9 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Request logging (before routes)
+app.use(requestLogger);
 
 // Serve uploaded files (must be before fileRoutes to handle static files)
 // Serve files from uploads directory at /api/files/uploads/*
@@ -44,6 +50,7 @@ app.use('/api/topics', topicRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/files', fileRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/logs', logRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
@@ -56,45 +63,49 @@ app.use(errorHandler);
 // Initialize database connection
 pool.query('SELECT NOW()')
   .then(async () => {
-    console.log('✅ Database connection established');
+    logInfo('Database connection established');
     
     // Auto-seed in demo mode
     if (process.env.DEMO_MODE === 'true' || process.env.NODE_ENV === 'demo') {
       try {
-        console.log('🎭 Demo mode enabled - checking for demo data...');
+        logInfo('Demo mode enabled - checking for demo data');
         const userCount = await pool.query('SELECT COUNT(*) FROM users');
         const topicCount = await pool.query('SELECT COUNT(*) FROM topics');
         
         if (userCount.rows[0].count === '0' || topicCount.rows[0].count === '0') {
-          console.log('🌱 Demo data not found - seeding...');
+          logInfo('Demo data not found - seeding');
           const seed = (await import('./db/seed')).default;
           await seed();
-          console.log('✅ Demo data seeded successfully');
+          logInfo('Demo data seeded successfully');
         } else {
-          console.log('✅ Demo data already exists');
+          logInfo('Demo data already exists');
         }
       } catch (error) {
-        console.error('⚠️  Demo seeding failed:', error);
-        console.log('💡 You can manually run: npm run seed');
+        logError(error as Error, { context: 'Demo seeding' });
+        logInfo('You can manually run: npm run seed');
       }
     }
     
     // Start server
     app.listen(PORT, () => {
-      console.log(`🚀 API server running on port ${PORT}`);
-      if (process.env.DEMO_MODE === 'true' || process.env.NODE_ENV === 'demo') {
-        console.log('🎭 Demo mode: ON');
-      }
+      logInfo(`API server running on port ${PORT}`, {
+        port: PORT,
+        environment: process.env.NODE_ENV || 'development',
+        demoMode: process.env.DEMO_MODE === 'true' || process.env.NODE_ENV === 'demo',
+      });
     });
   })
   .catch((error) => {
-    console.error('❌ Database connection failed:', error);
-    console.log('⚠️  Server will start but database operations will fail');
-    console.log('💡 Make sure PostgreSQL is running and DATABASE_URL is set correctly');
+    logError(error as Error, { context: 'Database connection' });
+    logInfo('Server will start but database operations will fail');
+    logInfo('Make sure PostgreSQL is running and DATABASE_URL is set correctly');
     
     // Start server anyway (for development)
     app.listen(PORT, () => {
-      console.log(`🚀 API server running on port ${PORT} (without database)`);
+      logInfo(`API server running on port ${PORT} (without database)`, {
+        port: PORT,
+        warning: 'Database connection failed',
+      });
     });
   });
 

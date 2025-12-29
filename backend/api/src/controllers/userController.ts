@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
 import * as UserModel from '../models/User';
+import { logError } from '../utils/logger';
+import { CustomError } from '../middleware/errorHandler';
 
 export const getProfile = async (req: Request, res: Response) => {
   try {
@@ -24,8 +26,8 @@ export const getProfile = async (req: Request, res: Response) => {
       created_at: user.created_at,
     });
   } catch (error) {
-    console.error('Get profile error:', error);
-    res.status(500).json({ error: 'Failed to get profile' });
+    logError(error as Error, { context: 'Get profile', userId: req.user?.userId });
+    throw new CustomError('Failed to get profile', 500, 'GET_PROFILE_ERROR');
   }
 };
 
@@ -71,8 +73,8 @@ export const updateProfile = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    console.error('Update profile error:', error);
-    res.status(500).json({ error: 'Failed to update profile' });
+    logError(error as Error, { context: 'Update profile', userId: req.user?.userId });
+    throw new CustomError('Failed to update profile', 500, 'UPDATE_PROFILE_ERROR');
   }
 };
 
@@ -100,8 +102,8 @@ export const uploadAvatar = async (req: Request, res: Response) => {
       avatar_url: updatedUser.avatar_url,
     });
   } catch (error) {
-    console.error('Upload avatar error:', error);
-    res.status(500).json({ error: 'Failed to upload avatar' });
+    logError(error as Error, { context: 'Upload avatar (URL)', userId: req.user?.userId });
+    throw new CustomError('Failed to upload avatar', 500, 'AVATAR_UPLOAD_URL_ERROR');
   }
 };
 

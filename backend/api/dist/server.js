@@ -41,14 +41,17 @@ const cors_1 = __importDefault(require("cors"));
 const helmet_1 = __importDefault(require("helmet"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const errorHandler_1 = require("./middleware/errorHandler");
+const requestLogger_1 = require("./middleware/requestLogger");
 const auth_1 = require("./routes/auth");
 const users_1 = require("./routes/users");
 const topics_1 = require("./routes/topics");
 const messages_1 = require("./routes/messages");
 const files_1 = require("./routes/files");
 const notifications_1 = require("./routes/notifications");
+const logs_1 = require("./routes/logs");
 const connection_1 = __importDefault(require("./db/connection"));
 const path_1 = __importDefault(require("path"));
+const logger_1 = require("./utils/logger");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 3001;
@@ -60,6 +63,8 @@ app.use((0, cors_1.default)({
 }));
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
+// Request logging (before routes)
+app.use(requestLogger_1.requestLogger);
 // Serve uploaded files (must be before fileRoutes to handle static files)
 // Serve files from uploads directory at /api/files/uploads/*
 app.use('/api/files/uploads', express_1.default.static(path_1.default.join(process.cwd(), 'uploads'), {
@@ -77,6 +82,7 @@ app.use('/api/topics', topics_1.topicRoutes);
 app.use('/api/messages', messages_1.messageRoutes);
 app.use('/api/files', files_1.fileRoutes);
 app.use('/api/notifications', notifications_1.notificationRoutes);
+app.use('/api/logs', logs_1.logRoutes);
 // Health check
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -86,42 +92,46 @@ app.use(errorHandler_1.errorHandler);
 // Initialize database connection
 connection_1.default.query('SELECT NOW()')
     .then(async () => {
-    console.log('✅ Database connection established');
+    (0, logger_1.logInfo)('Database connection established');
     // Auto-seed in demo mode
     if (process.env.DEMO_MODE === 'true' || process.env.NODE_ENV === 'demo') {
         try {
-            console.log('🎭 Demo mode enabled - checking for demo data...');
+            (0, logger_1.logInfo)('Demo mode enabled - checking for demo data');
             const userCount = await connection_1.default.query('SELECT COUNT(*) FROM users');
             const topicCount = await connection_1.default.query('SELECT COUNT(*) FROM topics');
             if (userCount.rows[0].count === '0' || topicCount.rows[0].count === '0') {
-                console.log('🌱 Demo data not found - seeding...');
+                (0, logger_1.logInfo)('Demo data not found - seeding');
                 const seed = (await Promise.resolve().then(() => __importStar(require('./db/seed')))).default;
                 await seed();
-                console.log('✅ Demo data seeded successfully');
+                (0, logger_1.logInfo)('Demo data seeded successfully');
             }
             else {
-                console.log('✅ Demo data already exists');
+                (0, logger_1.logInfo)('Demo data already exists');
             }
         }
         catch (error) {
-            console.error('⚠️  Demo seeding failed:', error);
-            console.log('💡 You can manually run: npm run seed');
+            (0, logger_1.logError)(error, { context: 'Demo seeding' });
+            (0, logger_1.logInfo)('You can manually run: npm run seed');
         }
     }
     // Start server
     app.listen(PORT, () => {
-        console.log(`🚀 API server running on port ${PORT}`);
-        if (process.env.DEMO_MODE === 'true' || process.env.NODE_ENV === 'demo') {
-            console.log('🎭 Demo mode: ON');
-        }
+        (0, logger_1.logInfo)(`API server running on port ${PORT}`, {
+            port: PORT,
+            environment: process.env.NODE_ENV || 'development',
+            demoMode: process.env.DEMO_MODE === 'true' || process.env.NODE_ENV === 'demo',
+        });
     });
 })
     .catch((error) => {
-    console.error('❌ Database connection failed:', error);
-    console.log('⚠️  Server will start but database operations will fail');
-    console.log('💡 Make sure PostgreSQL is running and DATABASE_URL is set correctly');
+    (0, logger_1.logError)(error, { context: 'Database connection' });
+    (0, logger_1.logInfo)('Server will start but database operations will fail');
+    (0, logger_1.logInfo)('Make sure PostgreSQL is running and DATABASE_URL is set correctly');
     // Start server anyway (for development)
     app.listen(PORT, () => {
-        console.log(`🚀 API server running on port ${PORT} (without database)`);
+        (0, logger_1.logInfo)(`API server running on port ${PORT} (without database)`, {
+            port: PORT,
+            warning: 'Database connection failed',
+        });
     });
 });

@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import { createUser, getUserByEmail, verifyUserPassword } from '../models/User';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken, TokenPayload } from '../utils/jwt';
 import { validatePasswordStrength } from '../utils/password';
+import { logError, logWarning, logInfo } from '../utils/logger';
+import { CustomError } from '../middleware/errorHandler';
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -56,11 +58,13 @@ export const register = async (req: Request, res: Response) => {
       refreshToken,
     });
   } catch (error: any) {
-    console.error('Registration error:', error);
+    const email = req.body?.email;
+    logError(error, { context: 'User registration', email });
     if (error.code === '23505') { // PostgreSQL unique violation
+      logWarning('Registration attempt with existing email', { email });
       return res.status(409).json({ error: 'User with this email already exists' });
     }
-    res.status(500).json({ error: 'Registration failed' });
+    throw new CustomError('Registration failed', 500, 'REGISTRATION_ERROR');
   }
 };
 
@@ -102,8 +106,8 @@ export const login = async (req: Request, res: Response) => {
       refreshToken,
     });
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ error: 'Login failed' });
+    logError(error as Error, { context: 'User login', email: req.body?.email });
+    throw new CustomError('Login failed', 500, 'LOGIN_ERROR');
   }
 };
 
@@ -129,8 +133,8 @@ export const refresh = async (req: Request, res: Response) => {
       accessToken: newAccessToken,
     });
   } catch (error: any) {
-    console.error('Refresh token error:', error);
-    res.status(401).json({ error: error.message || 'Invalid refresh token' });
+    logError(error, { context: 'Token refresh' });
+    throw new CustomError(error.message || 'Invalid refresh token', 401, 'REFRESH_TOKEN_ERROR');
   }
 };
 
@@ -140,8 +144,8 @@ export const logout = async (req: Request, res: Response) => {
     // For now, we'll just return success
     res.json({ message: 'Logout successful' });
   } catch (error) {
-    console.error('Logout error:', error);
-    res.status(500).json({ error: 'Logout failed' });
+    logError(error as Error, { context: 'User logout', userId: req.user?.userId });
+    throw new CustomError('Logout failed', 500, 'LOGOUT_ERROR');
   }
 };
 

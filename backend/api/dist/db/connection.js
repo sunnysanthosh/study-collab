@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getClient = exports.query = void 0;
 const pg_1 = require("pg");
 const dotenv_1 = __importDefault(require("dotenv"));
+const logger_1 = require("../utils/logger");
 dotenv_1.default.config();
 const poolConfig = {
     connectionString: process.env.DATABASE_URL || 'postgresql://studycollab:studycollab@localhost:5432/studycollab',
@@ -16,10 +17,10 @@ const poolConfig = {
 const pool = new pg_1.Pool(poolConfig);
 // Test connection
 pool.on('connect', () => {
-    console.log('✅ Database connected');
+    (0, logger_1.logInfo)('Database connected');
 });
 pool.on('error', (err) => {
-    console.error('❌ Unexpected database error:', err);
+    (0, logger_1.logError)(err, { context: 'Database pool error' });
     process.exit(-1);
 });
 // Helper function to execute queries
@@ -28,11 +29,11 @@ const query = async (text, params) => {
     try {
         const res = await pool.query(text, params);
         const duration = Date.now() - start;
-        console.log('Executed query', { text, duration, rows: res.rowCount });
+        (0, logger_1.logQuery)(text, params, duration);
         return res;
     }
     catch (error) {
-        console.error('Query error:', error);
+        (0, logger_1.logQuery)(text, params, Date.now() - start, error);
         throw error;
     }
 };

@@ -5,6 +5,80 @@ All notable changes to StudyCollab will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.1] - 2024-12-29
+
+### Added
+- **Comprehensive Logging System**
+  - Winston logger with daily log rotation
+  - Structured JSON logging for production
+  - Colorized console logging for development
+  - Multiple log levels (error, warn, info, http, debug)
+  - Separate log files for errors, HTTP, combined, exceptions, rejections
+  - Automatic log compression (gzip)
+  - Configurable log retention (7-30 days)
+
+- **Request Logging**
+  - HTTP request/response logging middleware
+  - Response time tracking
+  - User context capture (userId, email)
+  - IP address and user agent logging
+  - Sanitized request body logging (passwords redacted)
+
+- **Error Tracking System**
+  - Centralized error tracking with context
+  - Error counting and threshold alerts
+  - Categorized error tracking (API, Database, Auth, File)
+  - Error statistics API endpoint (`/api/logs/stats`)
+  - CustomError class for operational errors
+  - Async error wrapper (`asyncHandler`)
+
+- **Database Query Logging**
+  - Query execution tracking
+  - Performance monitoring
+  - Slow query detection (>1000ms warnings)
+  - Parameter logging (truncated for security)
+  - Error logging with stack traces
+
+- **Frontend Error Logging**
+  - Global error handlers (window error, unhandled rejections)
+  - Context capture (URL, user agent, user ID)
+  - Structured error logging
+  - Optional backend error reporting
+  - Error logger utility component
+
+- **Enhanced Error Handling**
+  - CustomError class with status codes and error codes
+  - Enhanced error handler middleware
+  - Error ID generation for production tracking
+  - Development vs production error responses
+  - Full request context in error logs
+
+- **Documentation**
+  - `LOGGING_SYSTEM.md` - Complete logging system guide
+  - `LOGGING_IMPLEMENTATION.md` - Implementation summary
+  - Usage examples and best practices
+
+### Changed
+- Replaced all `console.log/error/warn` with structured logging
+- Enhanced error handling in all controllers
+- Improved error messages with context
+- Updated error responses with error IDs (production)
+- Database connection logging improved
+
+### Security
+- Sensitive data redaction in logs (passwords, tokens)
+- Authentication error tracking
+- Request logging with user context
+- Audit trail for security events
+
+### Performance
+- Log file rotation prevents disk space issues
+- Automatic compression reduces storage
+- Configurable retention periods
+- Efficient query logging
+
+---
+
 ## [0.5.0] - 2024-12-29
 
 ### Added

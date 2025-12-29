@@ -1,5 +1,6 @@
 import { Pool, PoolConfig } from 'pg';
 import dotenv from 'dotenv';
+import { logInfo, logError, logQuery } from '../utils/logger';
 
 dotenv.config();
 
@@ -14,11 +15,11 @@ const pool = new Pool(poolConfig);
 
 // Test connection
 pool.on('connect', () => {
-  console.log('✅ Database connected');
+  logInfo('Database connected');
 });
 
 pool.on('error', (err) => {
-  console.error('❌ Unexpected database error:', err);
+  logError(err, { context: 'Database pool error' });
   process.exit(-1);
 });
 
@@ -28,10 +29,10 @@ export const query = async (text: string, params?: any[]) => {
   try {
     const res = await pool.query(text, params);
     const duration = Date.now() - start;
-    console.log('Executed query', { text, duration, rows: res.rowCount });
+    logQuery(text, params, duration);
     return res;
   } catch (error) {
-    console.error('Query error:', error);
+    logQuery(text, params, Date.now() - start, error as Error);
     throw error;
   }
 };

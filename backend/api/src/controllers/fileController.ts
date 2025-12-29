@@ -2,6 +2,9 @@ import { Request, Response } from 'express';
 import { upload, getFileUrl, deleteFile } from '../utils/fileStorage';
 import { FileAttachmentModel } from '../models/FileAttachment';
 import path from 'path';
+import { logError } from '../utils/logger';
+import { CustomError } from '../middleware/errorHandler';
+import { ErrorTracker } from '../utils/errorTracker';
 
 // Upload middleware
 export const uploadMiddleware = upload.single('file');
@@ -32,8 +35,10 @@ export const uploadFile = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    console.error('File upload error:', error);
-    res.status(500).json({ error: 'Failed to upload file' });
+    ErrorTracker.trackFileError(error as Error, req.file?.originalname, {
+      userId: req.user?.userId,
+    });
+    throw new CustomError('Failed to upload file', 500, 'FILE_UPLOAD_ERROR');
   }
 };
 
@@ -65,8 +70,11 @@ export const uploadAvatar = async (req: Request, res: Response) => {
       avatar_url: updatedUser.avatar_url,
     });
   } catch (error) {
-    console.error('Avatar upload error:', error);
-    res.status(500).json({ error: 'Failed to upload avatar' });
+    ErrorTracker.trackFileError(error as Error, req.file?.originalname, {
+      userId: req.user?.userId,
+      type: 'avatar',
+    });
+    throw new CustomError('Failed to upload avatar', 500, 'AVATAR_UPLOAD_ERROR');
   }
 };
 
@@ -77,13 +85,13 @@ export const getFile = async (req: Request, res: Response) => {
     
     res.sendFile(filePath, (err) => {
       if (err) {
-        console.error('File serve error:', err);
+        logError(err, { context: 'File serve', filePath });
         res.status(404).json({ error: 'File not found' });
       }
     });
   } catch (error) {
-    console.error('Get file error:', error);
-    res.status(500).json({ error: 'Failed to get file' });
+    logError(error as Error, { context: 'Get file', filePath: req.params.filename });
+    throw new CustomError('Failed to get file', 500, 'FILE_GET_ERROR');
   }
 };
 
@@ -105,14 +113,14 @@ export const deleteFileAttachment = async (req: Request, res: Response) => {
     
     res.json({ message: 'File deleted successfully' });
   } catch (error: any) {
-    console.error('Delete file error:', error);
+    logError(error, { context: 'Delete file', fileId: req.params.fileId, userId: req.user?.userId });
     if (error.message === 'Permission denied') {
-      return res.status(403).json({ error: 'Permission denied' });
+      throw new CustomError('Permission denied', 403, 'FILE_DELETE_PERMISSION_DENIED');
     }
     if (error.message === 'File attachment not found') {
-      return res.status(404).json({ error: 'File attachment not found' });
+      throw new CustomError('File attachment not found', 404, 'FILE_NOT_FOUND');
     }
-    res.status(500).json({ error: 'Failed to delete file' });
+    throw new CustomError('Failed to delete file', 500, 'FILE_DELETE_ERROR');
   }
 };
 

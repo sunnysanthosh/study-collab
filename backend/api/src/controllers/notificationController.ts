@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
 import { NotificationModel } from '../models/Notification';
+import { logError } from '../utils/logger';
+import { CustomError } from '../middleware/errorHandler';
 
 export const getNotifications = async (req: Request, res: Response) => {
   try {
@@ -15,8 +17,8 @@ export const getNotifications = async (req: Request, res: Response) => {
     
     res.json({ notifications });
   } catch (error) {
-    console.error('Get notifications error:', error);
-    res.status(500).json({ error: 'Failed to get notifications' });
+    logError(error as Error, { context: 'Get notifications', userId: req.user?.userId });
+    throw new CustomError('Failed to get notifications', 500, 'GET_NOTIFICATIONS_ERROR');
   }
 };
 
@@ -31,8 +33,8 @@ export const getUnreadCount = async (req: Request, res: Response) => {
     
     res.json({ count });
   } catch (error) {
-    console.error('Get unread count error:', error);
-    res.status(500).json({ error: 'Failed to get unread count' });
+    logError(error as Error, { context: 'Get unread count', userId: req.user?.userId });
+    throw new CustomError('Failed to get unread count', 500, 'GET_UNREAD_COUNT_ERROR');
   }
 };
 
@@ -48,8 +50,9 @@ export const markAsRead = async (req: Request, res: Response) => {
     
     res.json({ message: 'Notification marked as read' });
   } catch (error) {
-    console.error('Mark as read error:', error);
-    res.status(500).json({ error: 'Failed to mark notification as read' });
+    const { notificationId } = req.params;
+    logError(error as Error, { context: 'Mark notification as read', notificationId, userId: req.user?.userId });
+    throw new CustomError('Failed to mark notification as read', 500, 'MARK_READ_ERROR');
   }
 };
 
@@ -64,8 +67,8 @@ export const markAllAsRead = async (req: Request, res: Response) => {
     
     res.json({ message: 'All notifications marked as read' });
   } catch (error) {
-    console.error('Mark all as read error:', error);
-    res.status(500).json({ error: 'Failed to mark all notifications as read' });
+    logError(error as Error, { context: 'Mark all notifications as read', userId: req.user?.userId });
+    throw new CustomError('Failed to mark all notifications as read', 500, 'MARK_ALL_READ_ERROR');
   }
 };
 
@@ -81,8 +84,9 @@ export const deleteNotification = async (req: Request, res: Response) => {
     
     res.json({ message: 'Notification deleted' });
   } catch (error) {
-    console.error('Delete notification error:', error);
-    res.status(500).json({ error: 'Failed to delete notification' });
+    const { notificationId } = req.params;
+    logError(error as Error, { context: 'Delete notification', notificationId, userId: req.user?.userId });
+    throw new CustomError('Failed to delete notification', 500, 'DELETE_NOTIFICATION_ERROR');
   }
 };
 

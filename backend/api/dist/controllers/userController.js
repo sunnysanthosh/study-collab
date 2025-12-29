@@ -35,6 +35,8 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.uploadAvatar = exports.updateProfile = exports.getProfile = void 0;
 const UserModel = __importStar(require("../models/User"));
+const logger_1 = require("../utils/logger");
+const errorHandler_1 = require("../middleware/errorHandler");
 const getProfile = async (req, res) => {
     try {
         const userId = req.user?.userId;
@@ -55,8 +57,8 @@ const getProfile = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Get profile error:', error);
-        res.status(500).json({ error: 'Failed to get profile' });
+        (0, logger_1.logError)(error, { context: 'Get profile', userId: req.user?.userId });
+        throw new errorHandler_1.CustomError('Failed to get profile', 500, 'GET_PROFILE_ERROR');
     }
 };
 exports.getProfile = getProfile;
@@ -97,8 +99,8 @@ const updateProfile = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Update profile error:', error);
-        res.status(500).json({ error: 'Failed to update profile' });
+        (0, logger_1.logError)(error, { context: 'Update profile', userId: req.user?.userId });
+        throw new errorHandler_1.CustomError('Failed to update profile', 500, 'UPDATE_PROFILE_ERROR');
     }
 };
 exports.updateProfile = updateProfile;
@@ -122,8 +124,8 @@ const uploadAvatar = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Upload avatar error:', error);
-        res.status(500).json({ error: 'Failed to upload avatar' });
+        (0, logger_1.logError)(error, { context: 'Upload avatar (URL)', userId: req.user?.userId });
+        throw new errorHandler_1.CustomError('Failed to upload avatar', 500, 'AVATAR_UPLOAD_URL_ERROR');
     }
 };
 exports.uploadAvatar = uploadAvatar;
