@@ -76,6 +76,8 @@ export const updateProfile = async (req: Request, res: Response) => {
   }
 };
 
+// Avatar upload is now handled by fileController
+// This endpoint is kept for backward compatibility (URL-based avatars)
 export const uploadAvatar = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.userId;
@@ -84,8 +86,7 @@ export const uploadAvatar = async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Authentication required' });
     }
     
-    // TODO: Handle file upload, save to storage
-    // For now, accept avatar_url from request body
+    // Accept avatar_url from request body (for URL-based avatars)
     const { avatar_url } = req.body;
     
     if (!avatar_url) {

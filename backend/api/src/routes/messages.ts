@@ -8,6 +8,9 @@ export const messageRoutes = Router();
 messageRoutes.use(authenticate);
 
 messageRoutes.get('/topic/:topicId', MessageController.getMessages);
-messageRoutes.post('/', MessageController.createMessage);
-messageRoutes.delete('/:id', MessageController.deleteMessage);
+messageRoutes.post('/topic/:topicId', MessageController.postMessage);
+messageRoutes.put('/:messageId', MessageController.editMessage);
+messageRoutes.delete('/:messageId', MessageController.removeMessage);
+messageRoutes.post('/:messageId/reactions', MessageController.addReaction);
+messageRoutes.get('/:messageId/reactions', MessageController.getReactions);
 

@@ -1,17 +1,41 @@
 'use client';
 
 import { Shell } from "@/components/layout/Shell";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { useAuth } from "@/contexts/AuthContext";
+import { userApi, fileApi } from "@/lib/api";
+import { useToast } from "@/contexts/ToastContext";
 
 export default function ProfilePage() {
+    const { user, setUser } = useAuth();
+    const { showToast } = useToast();
     const [isEditing, setIsEditing] = useState(false);
-    const [name, setName] = useState('John Doe');
-    const [email, setEmail] = useState('john.doe@school.edu');
+    const [name, setName] = useState(user?.name || '');
+    const [email, setEmail] = useState(user?.email || '');
     const [bio, setBio] = useState('Computer Science student passionate about collaborative learning.');
-    const [avatar, setAvatar] = useState('');
+    const [avatar, setAvatar] = useState(user?.avatar_url || '');
     const [isLoading, setIsLoading] = useState(false);
+    const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+    useEffect(() => {
+        loadProfile();
+    }, []);
+
+    const loadProfile = async () => {
+        try {
+            const response = await userApi.getProfile();
+            if (response.data?.user) {
+                const userData = response.data.user;
+                setName(userData.name || '');
+                setEmail(userData.email || '');
+                setAvatar(userData.avatar_url || '');
+            }
+        } catch (error) {
+            console.error('Failed to load profile:', error);
+        }
+    };
 
     const stats = [
         { label: 'Topics Joined', value: '12' },
@@ -22,20 +46,69 @@ export default function ProfilePage() {
 
     const handleSave = async () => {
         setIsLoading(true);
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setIsLoading(false);
-        setIsEditing(false);
-        // TODO: Save to API
+        try {
+            const response = await userApi.updateProfile({ name, email });
+            if (response.error) {
+                showToast(response.error, 'error');
+                return;
+            }
+            
+            if (response.data?.user) {
+                setUser(response.data.user);
+                showToast('Profile updated successfully', 'success');
+                setIsEditing(false);
+            }
+        } catch (error) {
+            showToast('Failed to update profile', 'error');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (file) {
+        if (!file) return;
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            showToast('Please select an image file', 'error');
+            return;
+        }
+
+        // Validate file size (5MB max)
+        if (file.size > 5 * 1024 * 1024) {
+            showToast('Image size must be less than 5MB', 'error');
+            return;
+        }
+
+        setUploadingAvatar(true);
+        try {
+            // Preview
             const reader = new FileReader();
             reader.onloadend = () => {
                 setAvatar(reader.result as string);
             };
             reader.readAsDataURL(file);
+
+            // Upload
+            const response = await fileApi.uploadAvatar(file);
+            if (response.error) {
+                showToast(response.error, 'error');
+                return;
+            }
+
+            if (response.data?.avatar_url) {
+                setAvatar(response.data.avatar_url);
+                // Update user context
+                if (user) {
+                    setUser({ ...user, avatar_url: response.data.avatar_url });
+                }
+                showToast('Avatar updated successfully', 'success');
+            }
+        } catch (error) {
+            showToast('Failed to upload avatar', 'error');
+        } finally {
+            setUploadingAvatar(false);
         }
     };
 
@@ -86,6 +159,7 @@ export default function ProfilePage() {
                                         type="file"
                                         accept="image/*"
                                         onChange={handleAvatarChange}
+                                        disabled={uploadingAvatar}
                                         style={{ display: 'none' }}
                                     />
                                 </label>
@@ -108,10 +182,13 @@ export default function ProfilePage() {
                                         style={{ marginBottom: '1rem' }}
                                     />
                                     <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
-                                        <Button onClick={handleSave} isLoading={isLoading}>
+                                        <Button onClick={handleSave} isLoading={isLoading || uploadingAvatar}>
                                             Save Changes
                                         </Button>
-                                        <Button variant="ghost" onClick={() => setIsEditing(false)} disabled={isLoading}>
+                                        <Button variant="ghost" onClick={() => {
+                                            setIsEditing(false);
+                                            loadProfile(); // Reset to original values
+                                        }} disabled={isLoading || uploadingAvatar}>
                                             Cancel
                                         </Button>
                                     </div>

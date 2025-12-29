@@ -7,7 +7,10 @@ import { authRoutes } from './routes/auth';
 import { userRoutes } from './routes/users';
 import { topicRoutes } from './routes/topics';
 import { messageRoutes } from './routes/messages';
+import { fileRoutes } from './routes/files';
+import { notificationRoutes } from './routes/notifications';
 import pool from './db/connection';
+import path from 'path';
 
 dotenv.config();
 
@@ -23,11 +26,24 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Serve uploaded files (must be before fileRoutes to handle static files)
+// Serve files from uploads directory at /api/files/uploads/*
+app.use('/api/files/uploads', express.static(path.join(process.cwd(), 'uploads'), {
+  setHeaders: (res, filePath) => {
+    // Set appropriate headers for file downloads
+    if (filePath.endsWith('.pdf')) {
+      res.setHeader('Content-Type', 'application/pdf');
+    }
+  }
+}));
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/topics', topicRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/files', fileRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

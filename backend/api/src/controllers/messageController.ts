@@ -1,88 +1,104 @@
 import { Request, Response } from 'express';
-import * as MessageModel from '../models/Message';
-import * as TopicModel from '../models/Topic';
-import * as TopicMemberModel from '../models/TopicMember';
+import { createMessage, getMessagesByTopic, getMessageById, updateMessage, deleteMessage } from '../models/Message';
+import { MessageReactionModel } from '../models/MessageReaction';
+import { FileAttachmentModel } from '../models/FileAttachment';
 
 export const getMessages = async (req: Request, res: Response) => {
   try {
     const { topicId } = req.params;
-    const { limit = 50, offset = 0 } = req.query;
+    const limit = parseInt(req.query.limit as string) || 50;
+    const offset = parseInt(req.query.offset as string) || 0;
+
+    const messages = await getMessagesByTopic(topicId, limit, offset);
     
-    // Verify topic exists
-    const topic = await TopicModel.getTopicById(topicId);
-    if (!topic) {
-      return res.status(404).json({ error: 'Topic not found' });
-    }
-    
-    const messages = await MessageModel.getMessagesByTopic(
-      topicId,
-      Number(limit),
-      Number(offset)
-    );
-    
-    res.json({
-      messages,
-      count: messages.length,
-    });
+    // Get reactions and attachments for messages
+    const messageIds = messages.map(m => m.id);
+    const [reactions, reactionCounts] = await Promise.all([
+      Promise.all(messageIds.map(id => MessageReactionModel.getByMessageId(id))),
+      MessageReactionModel.getReactionCounts(messageIds),
+    ]);
+
+    const messagesWithExtras = messages.map((message, index) => ({
+      ...message,
+      reactions: reactions[index],
+      reaction_counts: reactionCounts[message.id] || {},
+    }));
+
+    res.json({ messages: messagesWithExtras });
   } catch (error) {
     console.error('Get messages error:', error);
     res.status(500).json({ error: 'Failed to get messages' });
   }
 };
 
-export const createMessage = async (req: Request, res: Response) => {
+export const postMessage = async (req: Request, res: Response) => {
   try {
-    const { topic_id, content } = req.body;
     const userId = req.user?.userId;
-    
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
     }
-    
-    if (!topic_id || !content) {
-      return res.status(400).json({ error: 'Topic ID and content are required' });
+
+    const { topicId } = req.params;
+    const { content } = req.body;
+
+    if (!content || !content.trim()) {
+      return res.status(400).json({ error: 'Message content is required' });
     }
-    
-    // Verify topic exists
-    const topic = await TopicModel.getTopicById(topic_id);
-    if (!topic) {
-      return res.status(404).json({ error: 'Topic not found' });
-    }
-    
-    // Check if user is a member of the topic
-    const isMember = await TopicMemberModel.isMemberOfTopic(topic_id, userId);
-    if (!isMember) {
-      return res.status(403).json({ error: 'You must be a member of this topic to send messages' });
-    }
-    
-    const message = await MessageModel.createMessage({
-      topic_id,
+
+    const message = await createMessage({
+      topic_id: topicId,
       user_id: userId,
-      content,
+      content: content.trim(),
     });
-    
-    res.status(201).json(message);
+
+    res.status(201).json({ message });
   } catch (error) {
-    console.error('Create message error:', error);
-    res.status(500).json({ error: 'Failed to create message' });
+    console.error('Post message error:', error);
+    res.status(500).json({ error: 'Failed to post message' });
   }
 };
 
-export const deleteMessage = async (req: Request, res: Response) => {
+export const editMessage = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
     const userId = req.user?.userId;
-    
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
     }
+
+    const { messageId } = req.params;
+    const { content } = req.body;
+
+    if (!content || !content.trim()) {
+      return res.status(400).json({ error: 'Message content is required' });
+    }
+
+    const message = await updateMessage(messageId, userId, content.trim());
     
-    const deleted = await MessageModel.deleteMessage(id, userId);
+    if (!message) {
+      return res.status(404).json({ error: 'Message not found or permission denied' });
+    }
+
+    res.json({ message });
+  } catch (error) {
+    console.error('Edit message error:', error);
+    res.status(500).json({ error: 'Failed to edit message' });
+  }
+};
+
+export const removeMessage = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const { messageId } = req.params;
+    const deleted = await deleteMessage(messageId, userId);
     
     if (!deleted) {
-      return res.status(404).json({ error: 'Message not found or you do not have permission to delete it' });
+      return res.status(404).json({ error: 'Message not found or permission denied' });
     }
-    
+
     res.json({ message: 'Message deleted successfully' });
   } catch (error) {
     console.error('Delete message error:', error);
@@ -90,3 +106,41 @@ export const deleteMessage = async (req: Request, res: Response) => {
   }
 };
 
+export const addReaction = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const { messageId } = req.params;
+    const { emoji } = req.body;
+
+    if (!emoji) {
+      return res.status(400).json({ error: 'Emoji is required' });
+    }
+
+    const reaction = await MessageReactionModel.create({
+      message_id: messageId,
+      user_id: userId,
+      emoji,
+    });
+
+    res.json({ reaction });
+  } catch (error) {
+    console.error('Add reaction error:', error);
+    res.status(500).json({ error: 'Failed to add reaction' });
+  }
+};
+
+export const getReactions = async (req: Request, res: Response) => {
+  try {
+    const { messageId } = req.params;
+    const reactions = await MessageReactionModel.getByMessageId(messageId);
+    
+    res.json({ reactions });
+  } catch (error) {
+    console.error('Get reactions error:', error);
+    res.status(500).json({ error: 'Failed to get reactions' });
+  }
+};

@@ -183,7 +183,98 @@ export const messageApi = {
   },
 
   createMessage: async (topicId: string, content: string) => {
-    return api.post('/api/messages', { topic_id: topicId, content });
+    return api.post(`/api/messages/topic/${topicId}`, { content });
+  },
+
+  editMessage: async (messageId: string, content: string) => {
+    return api.put(`/api/messages/${messageId}`, { content });
+  },
+
+  deleteMessage: async (messageId: string) => {
+    return api.delete(`/api/messages/${messageId}`);
+  },
+
+  addReaction: async (messageId: string, emoji: string) => {
+    return api.post(`/api/messages/${messageId}/reactions`, { emoji });
+  },
+
+  getReactions: async (messageId: string) => {
+    return api.get(`/api/messages/${messageId}/reactions`);
+  },
+};
+
+// File API
+export const fileApi = {
+  uploadFile: async (file: File, type: string = 'general') => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', type);
+    
+    const token = api.getToken();
+    const response = await fetch(`${API_URL}/api/files/upload`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData,
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      return { error: error.error || 'Upload failed' };
+    }
+    
+    const data = await response.json();
+    return { data };
+  },
+
+  uploadAvatar: async (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const token = api.getToken();
+    const response = await fetch(`${API_URL}/api/files/avatar`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData,
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      return { error: error.error || 'Upload failed' };
+    }
+    
+    const data = await response.json();
+    return { data };
+  },
+
+  getFileUrl: (path: string) => {
+    return `${API_URL}${path}`;
+  },
+};
+
+// Notification API
+export const notificationApi = {
+  getNotifications: async (limit = 50, offset = 0) => {
+    return api.get(`/api/notifications?limit=${limit}&offset=${offset}`);
+  },
+
+  getUnreadCount: async () => {
+    return api.get('/api/notifications/unread-count');
+  },
+
+  markAsRead: async (notificationId: string) => {
+    return api.put(`/api/notifications/${notificationId}/read`);
+  },
+
+  markAllAsRead: async () => {
+    return api.put('/api/notifications/read-all');
+  },
+
+  deleteNotification: async (notificationId: string) => {
+    return api.delete(`/api/notifications/${notificationId}`);
   },
 };
 

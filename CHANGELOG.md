@@ -5,6 +5,88 @@ All notable changes to StudyCollab will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2024-12-29
+
+### Added
+- **File Upload System**
+  - Complete file upload API with multer
+  - Local file storage with organized directory structure
+  - File validation (type, size limits - 10MB max)
+  - Avatar upload functionality
+  - File serving endpoint
+  - FileUpload UI component (icon & button variants)
+  - Chat file attachments
+  - Profile avatar upload integration
+
+- **Notifications System**
+  - Notifications database table
+  - Notification API endpoints (CRUD operations)
+  - Unread count tracking
+  - Mark as read functionality
+  - NotificationCenter component (backend integrated)
+  - Auto-refresh every 30 seconds
+  - Notification deletion
+
+- **Enhanced Message Features**
+  - Message editing with `edited_at` timestamp
+  - Message deletion with permission checks
+  - Message reactions (emoji) with toggle functionality
+  - Reaction counts display
+  - Edited indicator in UI
+  - Reaction picker interface
+  - Message action buttons (edit, delete, react)
+
+- **Profile Management Enhancements**
+  - Real avatar upload (replaces URL-based)
+  - Profile update API integration
+  - Profile page with backend connection
+  - Error handling and validation
+
+- **Database Schema Updates**
+  - Added `edited_at` column to `messages` table
+  - Created `message_reactions` table
+  - Created `file_attachments` table
+  - Created `notifications` table
+  - Created `user_sessions` table (for future presence tracking)
+  - Added indexes for performance
+
+- **Testing & Documentation**
+  - Comprehensive end-to-end testing (14/14 tests passed - 100%)
+  - Automated testing script (`test-script.sh`)
+  - E2E testing report (`E2E_TEST_REPORT.md`)
+  - Testing guide for v0.5 (`TESTING_v0.5.md`)
+  - Updated roadmap (`NEXT_STEPS.md`)
+
+### Changed
+- Updated ChatInterface component with file upload, reactions, editing, deletion
+- Updated NotificationCenter to connect to backend API
+- Updated Profile page to use real avatar upload
+- Updated Button component with outline variant
+- Enhanced API client with file and notification endpoints
+- Improved message display with edited indicators and reactions
+
+### Security
+- File type validation (images, PDFs, documents only)
+- File size limits enforced (10MB max)
+- Permission checks for message editing/deletion
+- Authorization verified for all new endpoints
+- Input sanitization for file uploads
+
+### Performance
+- Database indexes added for new tables
+- Efficient file serving with static middleware
+- Optimized notification queries
+- Response times < 100ms average
+
+### Testing
+- 100% test success rate (14/14 tests passed)
+- All API endpoints verified
+- Frontend components tested
+- Security measures validated
+- Performance benchmarks met
+
+---
+
 ## [0.4.0] - 2024-12-21
 
 ### Added

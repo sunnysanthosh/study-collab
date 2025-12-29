@@ -3,7 +3,7 @@
 import { ButtonHTMLAttributes, ReactNode } from 'react';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline';
   isLoading?: boolean;
   children: ReactNode;
 }
@@ -48,6 +48,11 @@ export function Button({
     danger: {
       backgroundColor: 'hsl(var(--destructive))',
       color: 'hsl(var(--destructive-foreground))',
+    },
+    outline: {
+      background: 'transparent',
+      color: 'hsl(var(--foreground))',
+      border: '1px solid hsl(var(--input))',
     },
   };
 

@@ -5,6 +5,7 @@ export interface Message {
   topic_id: string;
   user_id: string;
   content: string;
+  edited_at: Date | null;
   created_at: Date;
 }
 
@@ -37,6 +38,7 @@ export const getMessagesByTopic = async (topicId: string, limit: number = 50, of
        m.topic_id,
        m.user_id,
        m.content,
+       m.edited_at,
        m.created_at,
        u.name as user_name,
        u.avatar_url as user_avatar
@@ -55,6 +57,18 @@ export const getMessageById = async (id: string): Promise<Message | null> => {
   const result = await query(
     `SELECT * FROM messages WHERE id = $1`,
     [id]
+  );
+  
+  return result.rows[0] || null;
+};
+
+export const updateMessage = async (id: string, userId: string, content: string): Promise<Message | null> => {
+  const result = await query(
+    `UPDATE messages 
+     SET content = $1, edited_at = NOW()
+     WHERE id = $2 AND user_id = $3
+     RETURNING *`,
+    [content, id, userId]
   );
   
   return result.rows[0] || null;
