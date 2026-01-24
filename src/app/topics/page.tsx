@@ -6,11 +6,13 @@ import { useState, useMemo, useEffect } from "react";
 import { Input } from "@/components/ui/Input";
 import { topicApi } from "@/lib/api";
 import { useToast } from "@/contexts/ToastContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Topic {
     id: string;
     title: string;
     description?: string;
+    category?: string;
     subject?: string;
     difficulty?: string;
     tags?: string[];
@@ -20,20 +22,48 @@ interface Topic {
 
 export default function TopicsPage() {
     const { showToast } = useToast();
+    const { user } = useAuth();
     const [topics, setTopics] = useState<Topic[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedTag, setSelectedTag] = useState<string | null>(null);
     const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
+    const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchQuery);
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
 
     useEffect(() => {
         loadTopics();
-    }, []);
+    }, [debouncedSearch, selectedTag, selectedSubject, selectedCategory]);
+
+    useEffect(() => {
+        if (user) {
+            loadFavorites();
+        } else {
+            setFavoriteIds(new Set());
+        }
+    }, [user]);
 
     const loadTopics = async () => {
         setIsLoading(true);
         try {
-            const response = await topicApi.getTopics();
+            const response = await topicApi.getTopics({
+                search: debouncedSearch || undefined,
+                category: selectedCategory || undefined,
+                subject: selectedSubject || undefined,
+                tags: selectedTag ? [selectedTag] : undefined,
+                limit: 100,
+                sort: 'created_at',
+                order: 'desc',
+            });
             if (response.error) {
                 showToast(response.error, 'error');
             } else if (response.data) {
@@ -44,6 +74,52 @@ export default function TopicsPage() {
             showToast('Failed to load topics', 'error');
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const loadFavorites = async () => {
+        try {
+            const response = await topicApi.getFavorites();
+            if (response.data?.favorites) {
+                setFavoriteIds(new Set(response.data.favorites));
+            }
+        } catch (error) {
+            console.error('Error loading favorites:', error);
+        }
+    };
+
+    const toggleFavorite = async (topicId: string) => {
+        if (!user) {
+            showToast('Please log in to save favorites.', 'error');
+            return;
+        }
+
+        const isFavorite = favoriteIds.has(topicId);
+        setFavoriteIds((prev) => {
+            const next = new Set(prev);
+            if (isFavorite) {
+                next.delete(topicId);
+            } else {
+                next.add(topicId);
+            }
+            return next;
+        });
+
+        const response = isFavorite
+            ? await topicApi.removeFavorite(topicId)
+            : await topicApi.addFavorite(topicId);
+
+        if (response.error) {
+            showToast(response.error, 'error');
+            setFavoriteIds((prev) => {
+                const next = new Set(prev);
+                if (isFavorite) {
+                    next.add(topicId);
+                } else {
+                    next.delete(topicId);
+                }
+                return next;
+            });
         }
     };
 
@@ -67,16 +143,17 @@ export default function TopicsPage() {
         return Array.from(subjectSet);
     }, [topics]);
 
-    const filteredTopics = useMemo(() => {
-        return topics.filter(topic => {
-            const matchesSearch = !searchQuery || 
-                topic.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                (topic.description && topic.description.toLowerCase().includes(searchQuery.toLowerCase()));
-            const matchesTag = !selectedTag || (topic.tags && topic.tags.includes(selectedTag));
-            const matchesSubject = !selectedSubject || topic.subject === selectedSubject;
-            return matchesSearch && matchesTag && matchesSubject;
+    const allCategories = useMemo(() => {
+        const categorySet = new Set<string>();
+        topics.forEach(topic => {
+            if (topic.category) {
+                categorySet.add(topic.category);
+            }
         });
-    }, [topics, searchQuery, selectedTag, selectedSubject]);
+        return Array.from(categorySet);
+    }, [topics]);
+
+    const hasFilters = !!debouncedSearch || !!selectedTag || !!selectedSubject || !!selectedCategory;
 
     return (
         <Shell>
@@ -99,6 +176,43 @@ export default function TopicsPage() {
                 </div>
                 
                 <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                    {allCategories.length > 0 && (
+                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                            <span style={{ fontSize: '0.9rem', color: 'hsl(var(--muted-foreground))' }}>Category:</span>
+                            <button
+                                onClick={() => setSelectedCategory(null)}
+                                style={{
+                                    padding: '0.5rem 1rem',
+                                    borderRadius: 'var(--radius-md)',
+                                    border: `1px solid ${selectedCategory === null ? 'hsl(var(--primary))' : 'hsl(var(--input))'}`,
+                                    background: selectedCategory === null ? 'hsl(var(--primary) / 0.1)' : 'transparent',
+                                    color: selectedCategory === null ? 'hsl(var(--primary))' : 'hsl(var(--foreground))',
+                                    cursor: 'pointer',
+                                    fontSize: '0.85rem',
+                                }}
+                            >
+                                All
+                            </button>
+                            {allCategories.map(category => (
+                                <button
+                                    key={category}
+                                    onClick={() => setSelectedCategory(category)}
+                                    style={{
+                                        padding: '0.5rem 1rem',
+                                        borderRadius: 'var(--radius-md)',
+                                        border: `1px solid ${selectedCategory === category ? 'hsl(var(--primary))' : 'hsl(var(--input))'}`,
+                                        background: selectedCategory === category ? 'hsl(var(--primary) / 0.1)' : 'transparent',
+                                        color: selectedCategory === category ? 'hsl(var(--primary))' : 'hsl(var(--foreground))',
+                                        cursor: 'pointer',
+                                        fontSize: '0.85rem',
+                                    }}
+                                >
+                                    {category}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
                     {allSubjects.length > 0 && (
                         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
                             <span style={{ fontSize: '0.9rem', color: 'hsl(var(--muted-foreground))' }}>Subject:</span>
@@ -180,9 +294,9 @@ export default function TopicsPage() {
                 <div style={{ textAlign: 'center', padding: '3rem', color: 'hsl(var(--muted-foreground))' }}>
                     Loading topics...
                 </div>
-            ) : filteredTopics.length === 0 ? (
+            ) : topics.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '3rem', color: 'hsl(var(--muted-foreground))' }}>
-                    {topics.length === 0 ? 'No topics available. Be the first to create one!' : 'No topics match your filters.'}
+                    {hasFilters ? 'No topics match your filters.' : 'No topics available. Be the first to create one!'}
                 </div>
             ) : (
                 <div style={{
@@ -190,13 +304,15 @@ export default function TopicsPage() {
                     gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
                     gap: '1.5rem'
                 }}>
-                    {filteredTopics.map(topic => (
+                    {topics.map(topic => (
                         <TopicCard
                             key={topic.id}
                             id={topic.id}
                             title={topic.title}
                             description={topic.description || ''}
                             tags={topic.tags || []}
+                            isFavorite={favoriteIds.has(topic.id)}
+                            onToggleFavorite={user ? toggleFavorite : undefined}
                         />
                     ))}
                 </div>

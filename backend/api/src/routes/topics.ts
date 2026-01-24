@@ -8,6 +8,9 @@ import {
   deleteTopic,
   joinTopic,
   leaveTopic,
+  getFavorites,
+  addFavorite,
+  removeFavorite,
 } from '../controllers/topicController';
 
 export const topicRoutes = Router();
@@ -21,6 +24,9 @@ topicRoutes.get('/:id', optionalAuthenticate, getTopic);
 // All other routes require authentication
 topicRoutes.use(authenticate);
 
+topicRoutes.get('/favorites/list', getFavorites);
+topicRoutes.post('/:id/favorite', addFavorite);
+topicRoutes.delete('/:id/favorite', removeFavorite);
 topicRoutes.post('/', createTopic);
 topicRoutes.put('/:id', updateTopic);
 topicRoutes.delete('/:id', deleteTopic);

@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS topics (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   title VARCHAR(255) NOT NULL,
   description TEXT,
+  category VARCHAR(100),
   subject VARCHAR(100),
   difficulty VARCHAR(50),
   tags TEXT[],
@@ -34,6 +35,14 @@ CREATE TABLE IF NOT EXISTS topic_members (
   topic_id UUID REFERENCES topics(id) ON DELETE CASCADE,
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   joined_at TIMESTAMP DEFAULT NOW(),
+  PRIMARY KEY (topic_id, user_id)
+);
+
+-- Topic Favorites Table
+CREATE TABLE IF NOT EXISTS topic_favorites (
+  topic_id UUID REFERENCES topics(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMP DEFAULT NOW(),
   PRIMARY KEY (topic_id, user_id)
 );
 
@@ -106,8 +115,11 @@ CREATE INDEX IF NOT EXISTS idx_messages_topic_id ON messages(topic_id);
 CREATE INDEX IF NOT EXISTS idx_messages_user_id ON messages(user_id);
 CREATE INDEX IF NOT EXISTS idx_messages_created_at ON messages(created_at);
 CREATE INDEX IF NOT EXISTS idx_topics_created_by ON topics(created_by);
+CREATE INDEX IF NOT EXISTS idx_topics_category ON topics(category);
 CREATE INDEX IF NOT EXISTS idx_topic_members_topic_id ON topic_members(topic_id);
 CREATE INDEX IF NOT EXISTS idx_topic_members_user_id ON topic_members(user_id);
+CREATE INDEX IF NOT EXISTS idx_topic_favorites_topic_id ON topic_favorites(topic_id);
+CREATE INDEX IF NOT EXISTS idx_topic_favorites_user_id ON topic_favorites(user_id);
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_message_reactions_message_id ON message_reactions(message_id);
 CREATE INDEX IF NOT EXISTS idx_file_attachments_message_id ON file_attachments(message_id);
@@ -116,6 +128,9 @@ CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(user_id, read
 CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id ON user_sessions(user_id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_user_sessions_user_id_unique ON user_sessions(user_id);
 CREATE INDEX IF NOT EXISTS idx_token_blacklist_expires_at ON token_blacklist(expires_at);
+CREATE INDEX IF NOT EXISTS idx_topics_search ON topics USING GIN (
+  to_tsvector('english', coalesce(title, '') || ' ' || coalesce(description, ''))
+);
 
 -- Function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()

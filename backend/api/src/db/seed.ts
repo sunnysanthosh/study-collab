@@ -45,6 +45,7 @@ const demoTopics = [
   {
     title: 'Calculus I',
     description: 'Limits, derivatives, and integrals. Join for homework help and study sessions!',
+    category: 'Mathematics',
     subject: 'Math',
     difficulty: 'Intermediate',
     tags: ['Calculus', 'Math', 'Derivatives'],
@@ -52,6 +53,7 @@ const demoTopics = [
   {
     title: 'Physics: Mechanics',
     description: 'Newtonian mechanics, work, energy, and power. Let\'s solve problems together!',
+    category: 'Science',
     subject: 'Physics',
     difficulty: 'Intermediate',
     tags: ['Physics', 'Mechanics', 'Science'],
@@ -59,6 +61,7 @@ const demoTopics = [
   {
     title: 'Intro to Computer Science',
     description: 'Algorithms, data structures, and Python basics. Perfect for beginners!',
+    category: 'Computer Science',
     subject: 'Computer Science',
     difficulty: 'Beginner',
     tags: ['CS', 'Programming', 'Python', 'Algorithms'],
@@ -66,6 +69,7 @@ const demoTopics = [
   {
     title: 'Organic Chemistry',
     description: 'Structure, properties, and reactions of organic compounds. Study group for organic chem!',
+    category: 'Science',
     subject: 'Chemistry',
     difficulty: 'Advanced',
     tags: ['Chemistry', 'Organic', 'Science'],
@@ -73,6 +77,7 @@ const demoTopics = [
   {
     title: 'Cell Biology',
     description: 'Cell structure, function, and molecular biology fundamentals.',
+    category: 'Science',
     subject: 'Biology',
     difficulty: 'Intermediate',
     tags: ['Biology', 'Cells', 'Science'],
@@ -80,6 +85,7 @@ const demoTopics = [
   {
     title: 'Statistics and Probability',
     description: 'Probability distributions, statistical inference, and data analysis.',
+    category: 'Mathematics',
     subject: 'Math',
     difficulty: 'Intermediate',
     tags: ['Math', 'Statistics', 'Probability'],
@@ -161,12 +167,13 @@ async function seedTopics(userIds: { [key: string]: string }) {
       
       // Insert topic
       const result = await client.query(
-        `INSERT INTO topics (title, description, subject, difficulty, tags, created_by)
-         VALUES ($1, $2, $3, $4, $5, $6)
+        `INSERT INTO topics (title, description, category, subject, difficulty, tags, created_by)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
          RETURNING id`,
         [
           topicData.title,
           topicData.description,
+          (topicData as any).category || null,
           topicData.subject,
           topicData.difficulty,
           topicData.tags,

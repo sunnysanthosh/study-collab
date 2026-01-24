@@ -2,7 +2,7 @@
 
 **Date:** December 29, 2024  
 **Last Re-Run:** January 24, 2026  
-**Version:** v0.5  
+**Version:** v0.5 (re-validated for v0.5.2 changes)  
 **Tester:** Automated + Manual Testing  
 **Status:** ✅ **ALL TESTS PASSED**
 

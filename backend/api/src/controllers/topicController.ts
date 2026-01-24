@@ -2,23 +2,39 @@ import { Request, Response } from 'express';
 import * as TopicModel from '../models/Topic';
 import * as TopicMemberModel from '../models/TopicMember';
 import * as MessageModel from '../models/Message';
+import { TopicFavoriteModel } from '../models/TopicFavorite';
 import { logError } from '../utils/logger';
 import { CustomError } from '../middleware/errorHandler';
 
 export const getTopics = async (req: Request, res: Response) => {
   try {
-    const { search, subject, difficulty } = req.query;
+    const { search, subject, difficulty, category, tags, limit, offset, sort, order } = req.query;
     
     const filters: any = {};
     if (search) filters.search = search as string;
     if (subject) filters.subject = subject as string;
     if (difficulty) filters.difficulty = difficulty as string;
+    if (category) filters.category = category as string;
+    if (tags) {
+      const tagList = Array.isArray(tags)
+        ? (tags as string[])
+        : String(tags).split(',').map((tag) => tag.trim()).filter(Boolean);
+      if (tagList.length > 0) {
+        filters.tags = tagList;
+      }
+    }
+    if (limit) filters.limit = Math.min(parseInt(limit as string, 10) || 50, 100);
+    if (offset) filters.offset = Math.max(parseInt(offset as string, 10) || 0, 0);
+    if (sort && (sort === 'created_at' || sort === 'title')) filters.sort = sort;
+    if (order && (order === 'asc' || order === 'desc')) filters.order = order;
     
     const topics = await TopicModel.getAllTopics(filters);
     
     res.json({
       topics,
       count: topics.length,
+      limit: filters.limit ?? 50,
+      offset: filters.offset ?? 0,
     });
   } catch (error) {
     logError(error as Error, { context: 'Topic operation' }); throw new CustomError('Operation failed', 500, 'TOPIC_ERROR');
@@ -28,7 +44,7 @@ export const getTopics = async (req: Request, res: Response) => {
 
 export const createTopic = async (req: Request, res: Response) => {
   try {
-    const { title, description, subject, difficulty, tags } = req.body;
+    const { title, description, category, subject, difficulty, tags } = req.body;
     const userId = req.user?.userId;
     
     if (!userId) {
@@ -42,6 +58,7 @@ export const createTopic = async (req: Request, res: Response) => {
     const topic = await TopicModel.createTopic({
       title,
       description,
+      category,
       subject,
       difficulty,
       tags: Array.isArray(tags) ? tags : undefined,
@@ -185,6 +202,62 @@ export const leaveTopic = async (req: Request, res: Response) => {
     const { id } = req.params;
     logError(error as Error, { context: 'Leave topic', topicId: id, userId: req.user?.userId });
     throw new CustomError('Failed to leave topic', 500, 'LEAVE_TOPIC_ERROR');
+  }
+};
+
+export const getFavorites = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const favorites = await TopicFavoriteModel.getUserFavorites(userId);
+    res.json({ favorites });
+  } catch (error) {
+    logError(error as Error, { context: 'Get favorites', userId: req.user?.userId });
+    throw new CustomError('Failed to get favorites', 500, 'GET_FAVORITES_ERROR');
+  }
+};
+
+export const addFavorite = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const topic = await TopicModel.getTopicById(id);
+    if (!topic) {
+      return res.status(404).json({ error: 'Topic not found' });
+    }
+
+    await TopicFavoriteModel.add(id, userId);
+    res.json({ message: 'Topic favorited' });
+  } catch (error) {
+    const { id } = req.params;
+    logError(error as Error, { context: 'Add favorite', topicId: id, userId: req.user?.userId });
+    throw new CustomError('Failed to favorite topic', 500, 'ADD_FAVORITE_ERROR');
+  }
+};
+
+export const removeFavorite = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    await TopicFavoriteModel.remove(id, userId);
+    res.json({ message: 'Topic unfavorited' });
+  } catch (error) {
+    const { id } = req.params;
+    logError(error as Error, { context: 'Remove favorite', topicId: id, userId: req.user?.userId });
+    throw new CustomError('Failed to unfavorite topic', 500, 'REMOVE_FAVORITE_ERROR');
   }
 };
 

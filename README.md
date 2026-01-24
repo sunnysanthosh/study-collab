@@ -14,6 +14,8 @@ A real-time study collaboration platform built with Next.js. Collaborate with yo
 - 📄 **Message Pagination** - Load earlier messages on demand
 - 🔐 **User Authentication** - Secure login and signup system
 - 🛡️ **Security Hardening** - Rate limiting and token revocation on logout
+- ⭐ **Favorites** - Bookmark topics for quick access
+- ✅ **Testing & CI** - Unit tests with automated CI checks
 
 ## Getting Started
 
@@ -70,6 +72,7 @@ study-collab/
 - `./scripts/stop-services.sh` - Stop all services
 - `./scripts/status.sh` - Service status
 - `./test-script.sh` - Automated E2E tests
+- `npm test` - Run frontend unit tests
 
 ## Learn More
 

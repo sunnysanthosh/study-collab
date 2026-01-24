@@ -4,6 +4,7 @@ export interface Topic {
   id: string;
   title: string;
   description?: string;
+  category?: string;
   subject?: string;
   difficulty?: string;
   tags?: string[];
@@ -15,6 +16,7 @@ export interface Topic {
 export interface CreateTopicData {
   title: string;
   description?: string;
+  category?: string;
   subject?: string;
   difficulty?: string;
   tags?: string[];
@@ -23,12 +25,13 @@ export interface CreateTopicData {
 
 export const createTopic = async (topicData: CreateTopicData): Promise<Topic> => {
   const result = await query(
-    `INSERT INTO topics (title, description, subject, difficulty, tags, created_by)
-     VALUES ($1, $2, $3, $4, $5, $6)
+    `INSERT INTO topics (title, description, category, subject, difficulty, tags, created_by)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
      RETURNING *`,
     [
       topicData.title,
       topicData.description || null,
+      topicData.category || null,
       topicData.subject || null,
       topicData.difficulty || null,
       topicData.tags || [],
@@ -49,9 +52,15 @@ export const getTopicById = async (id: string): Promise<Topic | null> => {
 };
 
 export const getAllTopics = async (filters?: {
+  category?: string;
   subject?: string;
   difficulty?: string;
   search?: string;
+  tags?: string[];
+  limit?: number;
+  offset?: number;
+  sort?: 'created_at' | 'title';
+  order?: 'asc' | 'desc';
 }): Promise<Topic[]> => {
   let sql = 'SELECT * FROM topics WHERE 1=1';
   const params: any[] = [];
@@ -61,6 +70,11 @@ export const getAllTopics = async (filters?: {
     sql += ` AND subject = $${paramCount++}`;
     params.push(filters.subject);
   }
+
+  if (filters?.category) {
+    sql += ` AND category = $${paramCount++}`;
+    params.push(filters.category);
+  }
   
   if (filters?.difficulty) {
     sql += ` AND difficulty = $${paramCount++}`;
@@ -68,12 +82,30 @@ export const getAllTopics = async (filters?: {
   }
   
   if (filters?.search) {
-    sql += ` AND (title ILIKE $${paramCount} OR description ILIKE $${paramCount})`;
+    sql += ` AND (
+      to_tsvector('english', coalesce(title, '') || ' ' || coalesce(description, '')) @@ plainto_tsquery('english', $${paramCount})
+      OR title ILIKE $${paramCount + 1}
+      OR description ILIKE $${paramCount + 1}
+    )`;
+    params.push(filters.search);
     params.push(`%${filters.search}%`);
+    paramCount += 2;
+  }
+
+  if (filters?.tags && filters.tags.length > 0) {
+    sql += ` AND tags && $${paramCount}::text[]`;
+    params.push(filters.tags);
     paramCount++;
   }
-  
-  sql += ' ORDER BY created_at DESC';
+
+  const sortColumn = filters?.sort === 'title' ? 'title' : 'created_at';
+  const sortOrder = filters?.order === 'asc' ? 'ASC' : 'DESC';
+  sql += ` ORDER BY ${sortColumn} ${sortOrder}`;
+
+  const limit = filters?.limit ?? 50;
+  const offset = filters?.offset ?? 0;
+  sql += ` LIMIT $${paramCount} OFFSET $${paramCount + 1}`;
+  params.push(limit, offset);
   
   const result = await query(sql, params);
   return result.rows;
@@ -97,6 +129,11 @@ export const updateTopic = async (id: string, updates: Partial<CreateTopicData>)
   if (updates.subject) {
     fields.push(`subject = $${paramCount++}`);
     values.push(updates.subject);
+  }
+
+  if (updates.category) {
+    fields.push(`category = $${paramCount++}`);
+    values.push(updates.category);
   }
   
   if (updates.difficulty) {

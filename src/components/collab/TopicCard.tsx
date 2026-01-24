@@ -6,11 +6,13 @@ interface TopicCardProps {
     id: string;
     title: string;
     description: string;
-    activeUsers: number;
+    activeUsers?: number;
     tags: string[];
+    isFavorite?: boolean;
+    onToggleFavorite?: (id: string) => void;
 }
 
-export function TopicCard({ id, title, description, activeUsers, tags }: TopicCardProps) {
+export function TopicCard({ id, title, description, activeUsers = 0, tags, isFavorite, onToggleFavorite }: TopicCardProps) {
     return (
         <div 
             className="glass-panel" 
@@ -34,26 +36,43 @@ export function TopicCard({ id, title, description, activeUsers, tags }: TopicCa
         >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
                 <h3 style={{ fontSize: '1.25rem', margin: 0, lineHeight: '1.3' }}>{title}</h3>
-                <div style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '0.25rem',
-                    fontSize: '0.8rem', 
-                    color: 'hsl(var(--success))', 
-                    background: 'hsl(var(--success) / 0.1)', 
-                    padding: '0.25rem 0.75rem', 
-                    borderRadius: 'var(--radius-full)',
-                    whiteSpace: 'nowrap'
-                }}>
-                    <span style={{ 
-                        width: '6px', 
-                        height: '6px', 
-                        background: 'hsl(var(--success))', 
-                        borderRadius: '50%',
-                        display: 'inline-block',
-                        animation: 'pulse 2s ease-in-out infinite'
-                    }} />
-                    {activeUsers} active
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    {onToggleFavorite && (
+                        <button
+                            onClick={() => onToggleFavorite(id)}
+                            aria-label={isFavorite ? 'Remove favorite' : 'Add favorite'}
+                            style={{
+                                background: 'transparent',
+                                border: 'none',
+                                cursor: 'pointer',
+                                fontSize: '1rem',
+                                color: isFavorite ? 'hsl(var(--warning))' : 'hsl(var(--muted-foreground))'
+                            }}
+                        >
+                            {isFavorite ? '★' : '☆'}
+                        </button>
+                    )}
+                    <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '0.25rem',
+                        fontSize: '0.8rem', 
+                        color: 'hsl(var(--success))', 
+                        background: 'hsl(var(--success) / 0.1)', 
+                        padding: '0.25rem 0.75rem', 
+                        borderRadius: 'var(--radius-full)',
+                        whiteSpace: 'nowrap'
+                    }}>
+                        <span style={{ 
+                            width: '6px', 
+                            height: '6px', 
+                            background: 'hsl(var(--success))', 
+                            borderRadius: '50%',
+                            display: 'inline-block',
+                            animation: 'pulse 2s ease-in-out infinite'
+                        }} />
+                        {activeUsers} active
+                    </div>
                 </div>
             </div>
             <p style={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.9rem', flex: 1, lineHeight: '1.5' }}>

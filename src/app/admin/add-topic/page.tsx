@@ -5,11 +5,17 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { topicApi } from "@/lib/api";
+import { useToast } from "@/contexts/ToastContext";
 
 export default function AddTopicPage() {
     const router = useRouter();
+    const { showToast } = useToast();
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
+    const [category, setCategory] = useState('');
+    const [subject, setSubject] = useState('');
+    const [difficulty, setDifficulty] = useState('');
     const [tags, setTags] = useState('');
     const [errors, setErrors] = useState<{ title?: string; description?: string; tags?: string }>({});
     const [isLoading, setIsLoading] = useState(false);
@@ -41,15 +47,29 @@ export default function AddTopicPage() {
         if (!validate()) return;
         
         setIsLoading(true);
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        setIsLoading(false);
-        
-        // TODO: Implement actual API call
-        console.log('Creating topic:', { title, description, tags: tags.split(',').map(t => t.trim()) });
-        
-        // Redirect to topics page
-        router.push('/topics');
+        try {
+            const response = await topicApi.createTopic({
+                title,
+                description,
+                category: category || undefined,
+                subject: subject || undefined,
+                difficulty: difficulty || undefined,
+                tags: tags.split(',').map(t => t.trim()).filter(Boolean),
+            });
+
+            if (response.error) {
+                showToast(response.error, 'error');
+                return;
+            }
+
+            showToast('Topic created successfully', 'success');
+            router.push('/topics');
+        } catch (error) {
+            console.error('Failed to create topic:', error);
+            showToast('Failed to create topic', 'error');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -71,6 +91,34 @@ export default function AddTopicPage() {
                             error={errors.title}
                             required
                         />
+
+                        <Input
+                            id="category"
+                            type="text"
+                            label="Category"
+                            placeholder="e.g. Mathematics"
+                            value={category}
+                            onChange={(e) => setCategory(e.target.value)}
+                        />
+
+                        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                            <Input
+                                id="subject"
+                                type="text"
+                                label="Subject"
+                                placeholder="e.g. Math"
+                                value={subject}
+                                onChange={(e) => setSubject(e.target.value)}
+                            />
+                            <Input
+                                id="difficulty"
+                                type="text"
+                                label="Difficulty"
+                                placeholder="Beginner / Intermediate / Advanced"
+                                value={difficulty}
+                                onChange={(e) => setDifficulty(e.target.value)}
+                            />
+                        </div>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                             <label htmlFor="description" style={{ fontSize: '0.9rem', fontWeight: 500 }}>

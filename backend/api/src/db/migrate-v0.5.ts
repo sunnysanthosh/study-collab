@@ -20,6 +20,20 @@ async function migrateV05() {
     `);
     console.log('✅ Added edited_at column to messages');
 
+    // Add category column to topics if it doesn't exist
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'topics' AND column_name = 'category'
+        ) THEN
+          ALTER TABLE topics ADD COLUMN category VARCHAR(100);
+        END IF;
+      END $$;
+    `);
+    console.log('✅ Added category column to topics');
+
     // Create message_reactions table
     await client.query(`
       CREATE TABLE IF NOT EXISTS message_reactions (
@@ -77,6 +91,17 @@ async function migrateV05() {
     `);
     console.log('✅ Created user_sessions table');
 
+    // Create topic_favorites table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS topic_favorites (
+        topic_id UUID REFERENCES topics(id) ON DELETE CASCADE,
+        user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+        created_at TIMESTAMP DEFAULT NOW(),
+        PRIMARY KEY (topic_id, user_id)
+      );
+    `);
+    console.log('✅ Created topic_favorites table');
+
     // Create token_blacklist table
     await client.query(`
       CREATE TABLE IF NOT EXISTS token_blacklist (
@@ -98,6 +123,12 @@ async function migrateV05() {
       CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id ON user_sessions(user_id);
       CREATE UNIQUE INDEX IF NOT EXISTS idx_user_sessions_user_id_unique ON user_sessions(user_id);
       CREATE INDEX IF NOT EXISTS idx_token_blacklist_expires_at ON token_blacklist(expires_at);
+      CREATE INDEX IF NOT EXISTS idx_topics_category ON topics(category);
+      CREATE INDEX IF NOT EXISTS idx_topics_search ON topics USING GIN (
+        to_tsvector('english', coalesce(title, '') || ' ' || coalesce(description, ''))
+      );
+      CREATE INDEX IF NOT EXISTS idx_topic_favorites_topic_id ON topic_favorites(topic_id);
+      CREATE INDEX IF NOT EXISTS idx_topic_favorites_user_id ON topic_favorites(user_id);
     `);
     console.log('✅ Created indexes');
 

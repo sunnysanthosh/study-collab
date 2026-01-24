@@ -2,7 +2,7 @@
 
 **Release Date:** 2024-12-29  
 **Tag:** v0.5  
-**Status:** ✅ Released & Tested
+**Status:** ✅ Released & Tested (superseded by v0.5.2)
 
 ---
 
@@ -27,7 +27,7 @@
 - ✅ Mark as read functionality
 - ✅ NotificationCenter component (backend integrated)
 - ✅ Auto-refresh every 30 seconds
-- ⏳ Real-time WebSocket notifications (planned for v0.6)
+- ✅ Real-time WebSocket notifications (delivered in v0.5.2)
 
 #### 3. Enhanced Message Features
 - ✅ Message editing with `edited_at` timestamp
@@ -179,13 +179,10 @@ No new environment variables required. File uploads use local storage by default
 ## 🎯 What's Next
 
 Potential features for v0.6:
-- Real-time WebSocket notifications
-- User presence indicators
 - Advanced search and filtering
 - Topic categories and organization
-- Message pagination in frontend
-- File upload progress indicators
-- Comprehensive error logging
+- Admin dashboard enhancements
+- Testing infrastructure (unit/integration/E2E automation)
 
 ---
 
