@@ -7,6 +7,10 @@ vi.mock('../src/db/connection', () => ({
   },
 }));
 
+vi.mock('../src/utils/redis', () => ({
+  publishNotificationEvent: vi.fn().mockResolvedValue(true),
+}));
+
 describe('Notification model', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -14,6 +18,7 @@ describe('Notification model', () => {
 
   it('creates notification and attempts notify', async () => {
     const pool = (await import('../src/db/connection')).default as any;
+    const { publishNotificationEvent } = await import('../src/utils/redis');
     pool.query.mockResolvedValueOnce({ rows: [{ id: 'n1', user_id: 'u1' }] });
     pool.query.mockResolvedValueOnce({});
 
@@ -29,6 +34,9 @@ describe('Notification model', () => {
     expect(pool.query).toHaveBeenCalledWith(
       expect.stringContaining('INSERT INTO notifications'),
       ['u1', 'message', 'New message', 'Hello', '/topics/t1']
+    );
+    expect(publishNotificationEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: 'u1' })
     );
   });
 

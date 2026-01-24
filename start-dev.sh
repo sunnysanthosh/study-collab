@@ -21,6 +21,7 @@ fi
 
 echo "✅ Node.js version: $(node --version)"
 echo ""
+export REDIS_URL="${REDIS_URL:-redis://localhost:6379}"
 
 # Check if Docker is installed (optional)
 if command -v docker &> /dev/null; then
@@ -98,6 +99,24 @@ if command -v docker &> /dev/null; then
     fi
 else
     echo "${YELLOW}⚠️  Docker not available. Please ensure PostgreSQL is running on localhost:5432${NC}"
+fi
+
+# Check if Redis is running
+echo ""
+echo "🔍 Checking Redis..."
+if command -v docker &> /dev/null; then
+    if docker ps | grep -q studycollab-redis; then
+        echo "✅ Redis container is running"
+    else
+        echo "${YELLOW}⚠️  Redis not running. Starting container...${NC}"
+        docker run -d \
+            --name studycollab-redis \
+            -p 6379:6379 \
+            redis:7-alpine
+        echo "✅ Redis container started"
+    fi
+else
+    echo "${YELLOW}⚠️  Docker not available. Please ensure Redis is running on localhost:6379${NC}"
 fi
 
 echo ""

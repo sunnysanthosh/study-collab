@@ -1,4 +1,5 @@
 import pool from '../db/connection';
+import { publishNotificationEvent } from '../utils/redis';
 
 export interface Notification {
   id: string;
@@ -29,10 +30,14 @@ export const NotificationModel = {
     );
     const notification = result.rows[0];
 
+    const payload = { userId: notification.user_id, notification };
+
+    await publishNotificationEvent(payload);
+
     try {
       await pool.query('SELECT pg_notify($1, $2)', [
         'notification_created',
-        JSON.stringify({ userId: notification.user_id, notification }),
+        JSON.stringify(payload),
       ]);
     } catch {
       // Notification delivery is best-effort

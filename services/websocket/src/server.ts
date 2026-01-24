@@ -9,6 +9,7 @@ import * as UserModel from './models/User';
 import * as TopicMemberModel from './models/TopicMember';
 import pool from './db/connection';
 import crypto from 'crypto';
+import { publishNotificationEvent, startNotificationSubscription } from './utils/redis';
 
 dotenv.config();
 
@@ -35,6 +36,11 @@ interface AuthenticatedSocket extends Socket {
 }
 
 const rooms = new Map<string, Set<RoomUser>>();
+
+const emitNotification = (payload: { userId?: string; notification?: unknown }) => {
+  if (!payload.userId) return;
+  io.to(payload.userId).emit('notification', payload.notification);
+};
 
 // Middleware for JWT authentication
 const hashToken = (token: string): string => {
@@ -81,10 +87,7 @@ const startNotificationListener = async () => {
       if (!msg.payload) return;
       try {
         const payload = JSON.parse(msg.payload);
-        const userId = payload.userId;
-        if (userId) {
-          io.to(userId).emit('notification', payload.notification);
-        }
+        emitNotification(payload);
       } catch (error) {
         console.error('Failed to parse notification payload:', error);
       }
@@ -119,9 +122,11 @@ const createMessageNotifications = async (topicId: string, senderId: string, con
       ]
     );
     const notification = notificationResult.rows[0];
+    const payload = { userId: notification.user_id, notification };
+    await publishNotificationEvent(payload);
     await pool.query('SELECT pg_notify($1, $2)', [
       'notification_created',
-      JSON.stringify({ userId: notification.user_id, notification }),
+      JSON.stringify(payload),
     ]);
   }
 };
@@ -161,6 +166,15 @@ pool.query('SELECT NOW()')
     startNotificationListener().catch((error) => {
       console.error('❌ WebSocket: Notification listener error:', error);
     });
+    startNotificationSubscription(emitNotification)
+      .then((started) => {
+        if (started) {
+          console.log('✅ WebSocket: Listening for broker notifications');
+        }
+      })
+      .catch((error) => {
+        console.error('❌ WebSocket: Broker subscription error:', error);
+      });
   })
   .catch((error) => {
     console.error('❌ WebSocket: Database connection failed:', error);

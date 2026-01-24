@@ -1,8 +1,10 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { io, Socket } from 'socket.io-client';
 import jwt from 'jsonwebtoken';
-import { spawn } from 'child_process';
+import { spawn, execSync } from 'child_process';
 import path from 'path';
+import net from 'net';
+import { createClient } from 'redis';
 import {
   ensureDockerDb,
   waitForDb,
@@ -14,8 +16,45 @@ import {
 const WS_PORT = 3102;
 const WS_URL = `http://localhost:${WS_PORT}`;
 const JWT_SECRET = 'test-secret';
+const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const isPortOpen = (port: number) =>
+  new Promise<boolean>((resolve) => {
+    const socket = net.createConnection({ port, host: '127.0.0.1' });
+    socket.on('connect', () => {
+      socket.end();
+      resolve(true);
+    });
+    socket.on('error', () => resolve(false));
+  });
+
+const ensureRedis = async () => {
+  if (await isPortOpen(6379)) {
+    return;
+  }
+
+  try {
+    execSync('docker ps -a --format "{{.Names}}"', { stdio: 'pipe' });
+  } catch {
+    throw new Error('Redis is required for broker tests');
+  }
+
+  const containers = execSync('docker ps -a --format "{{.Names}}"')
+    .toString()
+    .split('\n')
+    .map((name) => name.trim());
+
+  if (containers.includes('studycollab-redis')) {
+    execSync('docker start studycollab-redis', { stdio: 'inherit' });
+  } else {
+    execSync('docker run -d --name studycollab-redis -p 6379:6379 redis:7-alpine', {
+      stdio: 'inherit',
+    });
+  }
+
+  await sleep(1000);
+};
 
 const waitForEvent = <T>(socket: Socket, event: string, timeout = 5000) =>
   new Promise<T>((resolve, reject) => {
@@ -36,11 +75,13 @@ describe('websocket integration', () => {
     process.env.DATABASE_URL =
       process.env.TEST_DATABASE_URL ||
       'postgresql://studycollab:studycollab@localhost:5432/studycollab';
+    process.env.REDIS_URL = REDIS_URL;
 
     await ensureDockerDb();
     await waitForDb();
     await migrateAndSeed();
     await resetDb();
+    await ensureRedis();
 
     serverProcess = spawn('npx', ['tsx', 'src/server.ts'], {
       cwd: path.resolve(__dirname, '..'),
@@ -54,7 +95,7 @@ describe('websocket integration', () => {
     });
 
     await sleep(2000);
-  });
+  }, 30000);
 
   afterAll(async () => {
     if (serverProcess) {
@@ -135,4 +176,36 @@ describe('websocket integration', () => {
     },
     15000
   );
+
+  it('receives notifications from broker events', async () => {
+    const pool = (await import('../../api/src/db/connection')).default;
+    const userResult = await pool.query(
+      'SELECT id, email FROM users WHERE email = $1 LIMIT 1',
+      ['test@studycollab.com']
+    );
+    const user = userResult.rows[0];
+
+    const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '1h' });
+    const socket = io(WS_URL, { auth: { token } });
+
+    await waitForEvent(socket, 'connect');
+
+    const redisClient = createClient({ url: REDIS_URL });
+    await redisClient.connect();
+
+    const notificationPromise = waitForEvent(socket, 'notification', 10000);
+    await redisClient.publish(
+      'notification.created',
+      JSON.stringify({
+        userId: user.id,
+        notification: { id: 'broker-1', title: 'Broker Test' },
+      })
+    );
+
+    const notification = await notificationPromise;
+    expect(notification).toEqual(expect.objectContaining({ id: 'broker-1' }));
+
+    await redisClient.disconnect();
+    socket.disconnect();
+  });
 });

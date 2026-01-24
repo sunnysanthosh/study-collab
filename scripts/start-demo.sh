@@ -7,6 +7,7 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+export REDIS_URL="${REDIS_URL:-redis://localhost:6379}"
 
 # Colors
 RED='\033[0;31m'
@@ -35,6 +36,16 @@ if ! docker ps | grep -q studycollab-db; then
     sleep 5
 fi
 
+echo -e "${BLUE}Checking Redis...${NC}"
+if ! docker ps | grep -q studycollab-redis; then
+    echo -e "${YELLOW}Starting Redis container...${NC}"
+    docker run -d \
+        --name studycollab-redis \
+        -p 6379:6379 \
+        redis:7-alpine > /dev/null 2>&1
+    sleep 2
+fi
+
 # Run migration
 echo -e "${BLUE}Running database migration...${NC}"
 cd "$PROJECT_DIR/services/api"
@@ -49,13 +60,13 @@ echo -e "${BLUE}Starting services in demo mode...${NC}"
 
 # Start API with demo mode
 cd "$PROJECT_DIR/services/api"
-DEMO_MODE=true npm run dev > /tmp/studycollab/API.log 2>&1 &
+DEMO_MODE=true REDIS_URL="$REDIS_URL" npm run dev > /tmp/studycollab/API.log 2>&1 &
 API_PID=$!
 echo "API started with PID: $API_PID"
 
 # Start WebSocket
 cd "$PROJECT_DIR/services/websocket"
-DEMO_MODE=true npm run dev > /tmp/studycollab/WebSocket.log 2>&1 &
+DEMO_MODE=true REDIS_URL="$REDIS_URL" npm run dev > /tmp/studycollab/WebSocket.log 2>&1 &
 WS_PID=$!
 echo "WebSocket started with PID: $WS_PID"
 

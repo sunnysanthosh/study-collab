@@ -17,6 +17,7 @@ PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LOG_DIR="/tmp/studycollab"
 PID_FILE="$LOG_DIR/pids.txt"
 STATUS_FILE="$LOG_DIR/status.txt"
+export REDIS_URL="${REDIS_URL:-redis://localhost:6379}"
 
 # Error Codes
 EXIT_SUCCESS=0
@@ -95,8 +96,8 @@ check_dependencies() {
 check_ports() {
     log "${BLUE}Checking ports...${NC}"
     
-    local ports=(3000 3001 3002 5432)
-    local port_names=("Frontend" "API" "WebSocket" "Database")
+    local ports=(3000 3001 3002 5432 6379)
+    local port_names=("Frontend" "API" "WebSocket" "Database" "Redis")
     
     for i in "${!ports[@]}"; do
         if check_port "${ports[$i]}"; then
@@ -146,6 +147,33 @@ setup_database() {
         fi
     else
         log "${YELLOW}⚠ Docker not available. Please ensure PostgreSQL is running on localhost:5432${NC}"
+    fi
+}
+
+# Function: Setup Redis
+setup_redis() {
+    log "${BLUE}Setting up Redis...${NC}"
+
+    if command -v docker &> /dev/null; then
+        if docker ps -a | grep -q studycollab-redis; then
+            if docker ps | grep -q studycollab-redis; then
+                log "${GREEN}✓ Redis container is running${NC}"
+            else
+                log "${YELLOW}Starting existing Redis container...${NC}"
+                docker start studycollab-redis
+                sleep 2
+            fi
+        else
+            log "${YELLOW}Creating Redis container...${NC}"
+            docker run -d \
+                --name studycollab-redis \
+                -p 6379:6379 \
+                redis:7-alpine > /dev/null 2>&1
+            sleep 2
+        fi
+        log "${GREEN}✓ Redis is ready${NC}"
+    else
+        log "${YELLOW}⚠ Docker not available. Please ensure Redis is running on localhost:6379${NC}"
     fi
 }
 
@@ -231,6 +259,7 @@ main() {
     # Setup
     install_dependencies
     setup_database
+    setup_redis
     
     log "${BLUE}Starting services in order...${NC}"
     

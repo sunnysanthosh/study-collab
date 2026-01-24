@@ -11,6 +11,7 @@ SOCKET_URL="${NEXT_PUBLIC_SOCKET_URL:-http://localhost:3002}"
 FRONTEND_URL="${E2E_BASE_URL:-http://localhost:3000}"
 DATABASE_URL="${TEST_DATABASE_URL:-postgresql://studycollab:studycollab@localhost:5432/studycollab}"
 JWT_SECRET="${JWT_SECRET:-test-secret}"
+REDIS_URL="${REDIS_URL:-redis://localhost:6379}"
 
 API_PID=""
 WS_PID=""
@@ -51,9 +52,9 @@ wait_for_url() {
 
 cd "$PROJECT_ROOT"
 
-if ! port_open 5432; then
+if ! port_open 5432 || ! port_open 6379; then
   if command -v docker &> /dev/null; then
-    docker compose up -d db
+    docker compose up -d db redis
   else
     echo "❌ Database is not available on port 5432"
     exit 1
@@ -79,12 +80,12 @@ cd "$PROJECT_ROOT/services/api"
 DATABASE_URL="$DATABASE_URL" npm run migrate
 DATABASE_URL="$DATABASE_URL" npm run seed
 
-DISABLE_RATE_LIMIT=true DATABASE_URL="$DATABASE_URL" JWT_SECRET="$JWT_SECRET" FRONTEND_URL="$FRONTEND_URL" \
+DISABLE_RATE_LIMIT=true DATABASE_URL="$DATABASE_URL" JWT_SECRET="$JWT_SECRET" FRONTEND_URL="$FRONTEND_URL" REDIS_URL="$REDIS_URL" \
   npm run dev > "$LOG_DIR/api.log" 2>&1 &
 API_PID=$!
 
 cd "$PROJECT_ROOT/services/websocket"
-DATABASE_URL="$DATABASE_URL" JWT_SECRET="$JWT_SECRET" FRONTEND_URL="$FRONTEND_URL" \
+DATABASE_URL="$DATABASE_URL" JWT_SECRET="$JWT_SECRET" FRONTEND_URL="$FRONTEND_URL" REDIS_URL="$REDIS_URL" \
   npm run dev > "$LOG_DIR/websocket.log" 2>&1 &
 WS_PID=$!
 
