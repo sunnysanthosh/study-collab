@@ -92,6 +92,15 @@ CREATE TABLE IF NOT EXISTS user_sessions (
   updated_at TIMESTAMP DEFAULT NOW()
 );
 
+-- Token Blacklist Table
+CREATE TABLE IF NOT EXISTS token_blacklist (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  token_hash VARCHAR(128) UNIQUE NOT NULL,
+  token_type VARCHAR(20) NOT NULL, -- 'access' or 'refresh'
+  expires_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
 -- Indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_messages_topic_id ON messages(topic_id);
 CREATE INDEX IF NOT EXISTS idx_messages_user_id ON messages(user_id);
@@ -105,6 +114,8 @@ CREATE INDEX IF NOT EXISTS idx_file_attachments_message_id ON file_attachments(m
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(user_id, read);
 CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id ON user_sessions(user_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_sessions_user_id_unique ON user_sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_token_blacklist_expires_at ON token_blacklist(expires_at);
 
 -- Function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -115,10 +126,12 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
--- Triggers to automatically update updated_at
+-- Triggers to automatically update updated_at (idempotent)
+DROP TRIGGER IF EXISTS update_users_updated_at ON users;
 CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_topics_updated_at ON topics;
 CREATE TRIGGER update_topics_updated_at BEFORE UPDATE ON topics
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 

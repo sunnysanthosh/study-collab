@@ -1,7 +1,9 @@
 import { Request, Response } from 'express';
 import { createMessage, getMessagesByTopic, getMessageById, updateMessage, deleteMessage } from '../models/Message';
 import { MessageReactionModel } from '../models/MessageReaction';
-import { FileAttachmentModel } from '../models/FileAttachment';
+import { NotificationModel } from '../models/Notification';
+import { getTopicMembers } from '../models/TopicMember';
+import { getTopicById } from '../models/Topic';
 import { logError } from '../utils/logger';
 import { CustomError } from '../middleware/errorHandler';
 
@@ -11,7 +13,7 @@ export const getMessages = async (req: Request, res: Response) => {
     const limit = parseInt(req.query.limit as string) || 50;
     const offset = parseInt(req.query.offset as string) || 0;
 
-    const messages = await getMessagesByTopic(topicId, limit, offset);
+    const messages = await getMessagesByTopic(topicId, limit, offset, 'desc');
     
     // Get reactions and attachments for messages
     const messageIds = messages.map(m => m.id);
@@ -25,8 +27,7 @@ export const getMessages = async (req: Request, res: Response) => {
       reactions: reactions[index],
       reaction_counts: reactionCounts[message.id] || {},
     }));
-
-    res.json({ messages: messagesWithExtras });
+    res.json({ messages: messagesWithExtras.reverse() });
   } catch (error) {
     const { topicId } = req.params;
     logError(error as Error, { context: 'Get messages', topicId });
@@ -53,6 +54,29 @@ export const postMessage = async (req: Request, res: Response) => {
       user_id: userId,
       content: content.trim(),
     });
+
+    try {
+      const [topic, members] = await Promise.all([
+        getTopicById(topicId),
+        getTopicMembers(topicId),
+      ]);
+
+      const notificationPromises = members
+        .filter((member: any) => member.user_id !== userId)
+        .map((member: any) =>
+          NotificationModel.create({
+            user_id: member.user_id,
+            type: 'message',
+            title: `New message in ${topic?.title || 'a topic'}`,
+            message: content.trim().slice(0, 140),
+            link: `/topics/${topicId}`,
+          })
+        );
+
+      await Promise.all(notificationPromises);
+    } catch (notifyError) {
+      logError(notifyError as Error, { context: 'Post message notifications', topicId });
+    }
 
     res.status(201).json({ message });
   } catch (error) {
@@ -131,6 +155,21 @@ export const addReaction = async (req: Request, res: Response) => {
       user_id: userId,
       emoji,
     });
+
+    try {
+      const message = await getMessageById(messageId);
+      if (message && message.user_id !== userId) {
+        await NotificationModel.create({
+          user_id: message.user_id,
+          type: 'reaction',
+          title: 'New reaction to your message',
+          message: `Someone reacted with ${emoji}`,
+          link: `/topics/${message.topic_id}`,
+        });
+      }
+    } catch (notifyError) {
+      logError(notifyError as Error, { context: 'Add reaction notifications', messageId });
+    }
 
     res.json({ reaction });
   } catch (error) {

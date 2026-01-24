@@ -8,6 +8,7 @@ import * as MessageModel from './models/Message';
 import * as UserModel from './models/User';
 import * as TopicMemberModel from './models/TopicMember';
 import pool from './db/connection';
+import crypto from 'crypto';
 
 dotenv.config();
 
@@ -36,6 +37,94 @@ interface AuthenticatedSocket extends Socket {
 const rooms = new Map<string, Set<RoomUser>>();
 
 // Middleware for JWT authentication
+const hashToken = (token: string): string => {
+  return crypto.createHash('sha256').update(token).digest('hex');
+};
+
+const isTokenBlacklisted = async (token: string): Promise<boolean> => {
+  const tokenHash = hashToken(token);
+  const result = await pool.query(
+    `SELECT 1
+     FROM token_blacklist
+     WHERE token_hash = $1
+       AND (expires_at IS NULL OR expires_at > NOW())
+     LIMIT 1`,
+    [tokenHash]
+  );
+  return result.rowCount > 0;
+};
+
+const upsertUserSession = async (userId: string, status: string, socketId?: string) => {
+  await pool.query(
+    `INSERT INTO user_sessions (user_id, status, last_seen, socket_id, updated_at)
+     VALUES ($1, $2, NOW(), $3, NOW())
+     ON CONFLICT (user_id)
+     DO UPDATE SET status = $2, last_seen = NOW(), socket_id = $3, updated_at = NOW()`,
+    [userId, status, socketId || null]
+  );
+};
+
+const setUserOffline = async (userId: string) => {
+  await pool.query(
+    `UPDATE user_sessions
+     SET status = 'offline', last_seen = NOW(), socket_id = NULL, updated_at = NOW()
+     WHERE user_id = $1`,
+    [userId]
+  );
+};
+
+const startNotificationListener = async () => {
+  const client = await pool.connect();
+  try {
+    await client.query('LISTEN notification_created');
+    client.on('notification', (msg) => {
+      if (!msg.payload) return;
+      try {
+        const payload = JSON.parse(msg.payload);
+        const userId = payload.userId;
+        if (userId) {
+          io.to(userId).emit('notification', payload.notification);
+        }
+      } catch (error) {
+        console.error('Failed to parse notification payload:', error);
+      }
+    });
+    console.log('✅ WebSocket: Listening for notification_created events');
+  } catch (error) {
+    console.error('❌ WebSocket: Failed to listen for notifications:', error);
+    client.release();
+  }
+};
+
+const createMessageNotifications = async (topicId: string, senderId: string, content: string) => {
+  const topicResult = await pool.query('SELECT title FROM topics WHERE id = $1', [topicId]);
+  const topicTitle = topicResult.rows[0]?.title || 'a topic';
+  const membersResult = await pool.query(
+    'SELECT user_id FROM topic_members WHERE topic_id = $1',
+    [topicId]
+  );
+
+  for (const row of membersResult.rows) {
+    if (row.user_id === senderId) continue;
+    const notificationResult = await pool.query(
+      `INSERT INTO notifications (user_id, type, title, message, link)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING *`,
+      [
+        row.user_id,
+        'message',
+        `New message in ${topicTitle}`,
+        content.trim().slice(0, 140),
+        `/topics/${topicId}`,
+      ]
+    );
+    const notification = notificationResult.rows[0];
+    await pool.query('NOTIFY notification_created, $1', [
+      JSON.stringify({ userId: notification.user_id, notification }),
+    ]);
+  }
+};
+
 io.use(async (socket: AuthenticatedSocket, next) => {
   try {
     const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.replace('Bearer ', '');
@@ -47,6 +136,10 @@ io.use(async (socket: AuthenticatedSocket, next) => {
     
     try {
       const payload = verifyToken(token);
+      const revoked = await isTokenBlacklisted(token);
+      if (revoked) {
+        return next(new Error('Token has been revoked'));
+      }
       socket.user = payload;
       console.log(`✅ Authenticated user: ${payload.email} (${payload.userId})`);
       next();
@@ -64,6 +157,9 @@ io.use(async (socket: AuthenticatedSocket, next) => {
 pool.query('SELECT NOW()')
   .then(() => {
     console.log('✅ WebSocket: Database connection established');
+    startNotificationListener().catch((error) => {
+      console.error('❌ WebSocket: Notification listener error:', error);
+    });
   })
   .catch((error) => {
     console.error('❌ WebSocket: Database connection failed:', error);
@@ -79,6 +175,9 @@ io.on('connection', async (socket: AuthenticatedSocket) => {
 
   const userId = socket.user.userId;
   console.log(`✅ User connected: ${socket.user.email} (${userId}) - Socket: ${socket.id}`);
+  socket.join(userId);
+  await upsertUserSession(userId, 'online', socket.id);
+  io.emit('presence-update', { userId, status: 'online' });
 
   // Get user info from database
   let userInfo: { name: string; avatar_url?: string } | null = null;
@@ -119,8 +218,8 @@ io.on('connection', async (socket: AuthenticatedSocket) => {
       
       // Load message history from database
       try {
-        const messages = await MessageModel.getMessagesByTopic(roomId, 50);
-        socket.emit('message-history', { messages });
+        const messages = await MessageModel.getMessagesByTopic(roomId, 50, 0, 'desc');
+        socket.emit('message-history', { messages: messages.reverse() });
       } catch (error) {
         console.error('Error loading message history:', error);
       }
@@ -196,6 +295,12 @@ io.on('connection', async (socket: AuthenticatedSocket) => {
       
       // Broadcast to all users in the room including sender
       io.to(roomId).emit('message', message);
+
+      try {
+        await createMessageNotifications(roomId, userId, text);
+      } catch (notifyError) {
+        console.error('Error creating message notifications:', notifyError);
+      }
       
       console.log(`Message saved and broadcast in room ${roomId} from ${userName}: ${text}`);
     } catch (error) {
@@ -231,6 +336,14 @@ io.on('connection', async (socket: AuthenticatedSocket) => {
         rooms.delete(roomId);
       }
     });
+
+    setUserOffline(userId)
+      .then(() => {
+        io.emit('presence-update', { userId, status: 'offline' });
+      })
+      .catch((error) => {
+        console.error('Failed to update offline status:', error);
+      });
   });
 });
 

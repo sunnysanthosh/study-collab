@@ -21,10 +21,17 @@ interface UseSocketProps {
   userName: string;
 }
 
+interface RoomUser {
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+}
+
 export function useSocket({ roomId, userId, userName }: UseSocketProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
+  const [roomUsers, setRoomUsers] = useState<RoomUser[]>([]);
   const socketRef = useRef<Socket | null>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -65,6 +72,23 @@ export function useSocket({ roomId, userId, userName }: UseSocketProps) {
         userId: msg.user_id,
       }));
       setMessages(historyMessages);
+    });
+
+    socket.on('room-users', (data: { users: RoomUser[] }) => {
+      setRoomUsers(data.users);
+    });
+
+    socket.on('user-joined', (data: { userId: string; userName: string; userAvatar?: string }) => {
+      setRoomUsers((prev) => {
+        if (prev.find((user) => user.userId === data.userId)) {
+          return prev;
+        }
+        return [...prev, { userId: data.userId, userName: data.userName, userAvatar: data.userAvatar }];
+      });
+    });
+
+    socket.on('user-left', (data: { userId: string }) => {
+      setRoomUsers((prev) => prev.filter((user) => user.userId !== data.userId));
     });
 
     // Handle new messages
@@ -157,6 +181,7 @@ export function useSocket({ roomId, userId, userName }: UseSocketProps) {
     messages,
     isConnected,
     typingUsers,
+    roomUsers,
     sendMessage,
     sendTypingIndicator,
   };

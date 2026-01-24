@@ -1,9 +1,19 @@
 import { Request, Response } from 'express';
 import { createUser, getUserByEmail, verifyUserPassword } from '../models/User';
+import jwt from 'jsonwebtoken';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken, TokenPayload } from '../utils/jwt';
 import { validatePasswordStrength } from '../utils/password';
 import { logError, logWarning, logInfo } from '../utils/logger';
 import { CustomError } from '../middleware/errorHandler';
+import { blacklistToken, isTokenBlacklisted } from '../models/TokenBlacklist';
+
+const getTokenExpiry = (token: string): Date | undefined => {
+  const decoded = jwt.decode(token) as { exp?: number } | null;
+  if (!decoded?.exp) {
+    return undefined;
+  }
+  return new Date(decoded.exp * 1000);
+};
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -118,6 +128,11 @@ export const refresh = async (req: Request, res: Response) => {
     if (!refreshToken) {
       return res.status(400).json({ error: 'Refresh token is required' });
     }
+
+    const isRefreshBlacklisted = await isTokenBlacklisted(refreshToken);
+    if (isRefreshBlacklisted) {
+      return res.status(401).json({ error: 'Refresh token has been revoked' });
+    }
     
     // Verify refresh token
     const payload = verifyRefreshToken(refreshToken);
@@ -140,8 +155,20 @@ export const refresh = async (req: Request, res: Response) => {
 
 export const logout = async (req: Request, res: Response) => {
   try {
-    // In a production app, you might want to blacklist the token
-    // For now, we'll just return success
+    const authHeader = req.headers.authorization;
+    const accessToken = authHeader?.startsWith('Bearer ')
+      ? authHeader.substring(7)
+      : undefined;
+    const { refreshToken } = req.body || {};
+
+    if (accessToken) {
+      await blacklistToken(accessToken, 'access', getTokenExpiry(accessToken));
+    }
+
+    if (refreshToken) {
+      await blacklistToken(refreshToken, 'refresh', getTokenExpiry(refreshToken));
+    }
+
     res.json({ message: 'Logout successful' });
   } catch (error) {
     logError(error as Error, { context: 'User logout', userId: req.user?.userId });

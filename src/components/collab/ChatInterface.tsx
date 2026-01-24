@@ -23,6 +23,7 @@ interface Message {
 }
 
 const EMOJI_OPTIONS = ['👍', '❤️', '😄', '🎉', '🔥', '💯'];
+const PAGE_SIZE = 50;
 
 export function ChatInterface() {
     const params = useParams();
@@ -33,7 +34,7 @@ export function ChatInterface() {
     const userId = user?.id || '';
     const userName = user?.name || user?.email || 'Guest';
     
-    const { messages: socketMessages, isConnected, typingUsers, sendMessage, sendTypingIndicator } = useSocket({
+    const { messages: socketMessages, isConnected, typingUsers, roomUsers, sendMessage, sendTypingIndicator } = useSocket({
         roomId,
         userId,
         userName,
@@ -45,13 +46,21 @@ export function ChatInterface() {
     const [editValue, setEditValue] = useState('');
     const [showReactions, setShowReactions] = useState<string | null>(null);
     const [uploadingFile, setUploadingFile] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+    const [loadingMessages, setLoadingMessages] = useState(false);
+    const [hasMoreMessages, setHasMoreMessages] = useState(true);
+    const [loadedCount, setLoadedCount] = useState(0);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     // Load messages from API
     useEffect(() => {
+        setMessages([]);
+        setLoadedCount(0);
+        setHasMoreMessages(true);
         const loadMessages = async () => {
+            setLoadingMessages(true);
             try {
-                const response = await messageApi.getMessages(roomId);
+                const response = await messageApi.getMessages(roomId, PAGE_SIZE, 0);
                 if (response.data?.messages) {
                     const formattedMessages: Message[] = response.data.messages.map((msg: any) => ({
                         id: msg.id,
@@ -66,13 +75,46 @@ export function ChatInterface() {
                         reaction_counts: msg.reaction_counts || {},
                     }));
                     setMessages(formattedMessages);
+                    setLoadedCount(formattedMessages.length);
+                    setHasMoreMessages(formattedMessages.length === PAGE_SIZE);
                 }
             } catch (error) {
                 console.error('Failed to load messages:', error);
+            } finally {
+                setLoadingMessages(false);
             }
         };
         loadMessages();
     }, [roomId, userId]);
+
+    const loadMoreMessages = async () => {
+        if (loadingMessages || !hasMoreMessages) return;
+        setLoadingMessages(true);
+        try {
+            const response = await messageApi.getMessages(roomId, PAGE_SIZE, loadedCount);
+            if (response.data?.messages) {
+                const formattedMessages: Message[] = response.data.messages.map((msg: any) => ({
+                    id: msg.id,
+                    user: msg.user_name || 'Unknown',
+                    avatar: msg.user_avatar || (msg.user_name?.charAt(0).toUpperCase() || '?'),
+                    text: msg.content,
+                    time: msg.created_at,
+                    isOwn: msg.user_id === userId,
+                    userId: msg.user_id,
+                    edited_at: msg.edited_at,
+                    reactions: msg.reactions || [],
+                    reaction_counts: msg.reaction_counts || {},
+                }));
+                setMessages((prev) => [...formattedMessages, ...prev]);
+                setLoadedCount((prev) => prev + formattedMessages.length);
+                setHasMoreMessages(formattedMessages.length === PAGE_SIZE);
+            }
+        } catch (error) {
+            console.error('Failed to load more messages:', error);
+        } finally {
+            setLoadingMessages(false);
+        }
+    };
 
     // Merge socket messages with API messages
     useEffect(() => {
@@ -165,8 +207,11 @@ export function ChatInterface() {
 
     const handleFileUpload = async (file: File) => {
         setUploadingFile(true);
+        setUploadProgress(0);
         try {
-            const response = await fileApi.uploadFile(file, 'messages');
+            const response = await fileApi.uploadFile(file, 'messages', (progress) => {
+                setUploadProgress(progress);
+            });
             if (response.error) {
                 showToast(response.error, 'error');
                 return;
@@ -188,6 +233,7 @@ export function ChatInterface() {
             showToast('Failed to upload file', 'error');
         } finally {
             setUploadingFile(false);
+            setUploadProgress(null);
         }
     };
 
@@ -223,6 +269,9 @@ export function ChatInterface() {
                         <span style={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))' }}>
                             {messages.length} {messages.length === 1 ? 'message' : 'messages'}
                         </span>
+                        <span style={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))' }}>
+                            • {roomUsers.length} online
+                        </span>
                         {isConnected ? (
                             <span style={{ fontSize: '0.75rem', color: 'hsl(var(--success))' }}>• Connected</span>
                         ) : (
@@ -248,6 +297,16 @@ export function ChatInterface() {
                 gap: '1rem',
                 minHeight: 0
             }}>
+                {hasMoreMessages && (
+                    <Button
+                        variant="ghost"
+                        onClick={loadMoreMessages}
+                        disabled={loadingMessages}
+                        style={{ alignSelf: 'center' }}
+                    >
+                        {loadingMessages ? 'Loading...' : 'Load earlier messages'}
+                    </Button>
+                )}
                 {messages.map((message) => (
                     <div 
                         key={message.id}
@@ -509,6 +568,15 @@ export function ChatInterface() {
                     disabled={uploadingFile}
                     variant="icon"
                 />
+                {uploadingFile && uploadProgress !== null && (
+                    <div style={{
+                        minWidth: '120px',
+                        fontSize: '0.75rem',
+                        color: 'hsl(var(--muted-foreground))'
+                    }}>
+                        Uploading {Math.round(uploadProgress)}%
+                    </div>
+                )}
                 <input
                     type="text"
                     placeholder="Type a message..."

@@ -72,12 +72,12 @@ export const getTopic = async (req: Request, res: Response) => {
     const members = await TopicMemberModel.getTopicMembers(id);
     
     // Get messages
-    const messages = await MessageModel.getMessagesByTopic(id);
+    const messages = await MessageModel.getMessagesByTopic(id, 50, 0, 'desc');
     
     res.json({
       ...topic,
       members,
-      messages,
+      messages: messages.reverse(),
     });
   } catch (error) {
     const { id } = req.params;

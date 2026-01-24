@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { verifyAccessToken, TokenPayload } from '../utils/jwt';
+import { isTokenBlacklisted } from '../models/TokenBlacklist';
 
 // Extend Express Request to include user
 declare global {
@@ -10,7 +11,7 @@ declare global {
   }
 }
 
-export const authenticate = (req: Request, res: Response, next: NextFunction) => {
+export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const authHeader = req.headers.authorization;
     
@@ -22,6 +23,10 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
     
     try {
       const payload = verifyAccessToken(token);
+      const isBlacklisted = await isTokenBlacklisted(token);
+      if (isBlacklisted) {
+        return res.status(401).json({ error: 'Token has been revoked' });
+      }
       req.user = payload;
       next();
     } catch (error: any) {
@@ -34,7 +39,7 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
 };
 
 // Optional authentication - doesn't fail if no token
-export const optionalAuthenticate = (req: Request, res: Response, next: NextFunction) => {
+export const optionalAuthenticate = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const authHeader = req.headers.authorization;
     
@@ -42,7 +47,8 @@ export const optionalAuthenticate = (req: Request, res: Response, next: NextFunc
       const token = authHeader.substring(7);
       try {
         const payload = verifyAccessToken(token);
-        req.user = payload;
+        const isBlacklisted = await isTokenBlacklisted(token);
+        req.user = isBlacklisted ? undefined : payload;
       } catch (error) {
         // Token invalid, but continue without user
         req.user = undefined;

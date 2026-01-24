@@ -77,6 +77,18 @@ async function migrateV05() {
     `);
     console.log('✅ Created user_sessions table');
 
+    // Create token_blacklist table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS token_blacklist (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        token_hash VARCHAR(128) UNIQUE NOT NULL,
+        token_type VARCHAR(20) NOT NULL,
+        expires_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+    console.log('✅ Created token_blacklist table');
+
     // Create indexes
     await client.query(`
       CREATE INDEX IF NOT EXISTS idx_message_reactions_message_id ON message_reactions(message_id);
@@ -84,6 +96,8 @@ async function migrateV05() {
       CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
       CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(user_id, read);
       CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id ON user_sessions(user_id);
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_user_sessions_user_id_unique ON user_sessions(user_id);
+      CREATE INDEX IF NOT EXISTS idx_token_blacklist_expires_at ON token_blacklist(expires_at);
     `);
     console.log('✅ Created indexes');
 

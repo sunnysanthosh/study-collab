@@ -30,7 +30,13 @@ export const createMessage = async (messageData: CreateMessageData): Promise<Mes
   return result.rows[0];
 };
 
-export const getMessagesByTopic = async (topicId: string, limit: number = 50): Promise<MessageWithUser[]> => {
+export const getMessagesByTopic = async (
+  topicId: string,
+  limit: number = 50,
+  offset: number = 0,
+  order: 'asc' | 'desc' = 'asc'
+): Promise<MessageWithUser[]> => {
+  const direction = order === 'desc' ? 'DESC' : 'ASC';
   const result = await query(
     `SELECT 
        m.id,
@@ -43,9 +49,9 @@ export const getMessagesByTopic = async (topicId: string, limit: number = 50): P
      FROM messages m
      LEFT JOIN users u ON m.user_id = u.id
      WHERE m.topic_id = $1
-     ORDER BY m.created_at ASC
-     LIMIT $2`,
-    [topicId, limit]
+     ORDER BY m.created_at ${direction}
+     LIMIT $2 OFFSET $3`,
+    [topicId, limit, offset]
   );
   
   return result.rows;

@@ -167,7 +167,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const logout = async () => {
         try {
-            await authApi.logout();
+            await authApi.logout(refreshToken);
         } catch (error) {
             console.error('Logout error:', error);
         } finally {

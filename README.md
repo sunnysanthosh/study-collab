@@ -7,8 +7,13 @@ A real-time study collaboration platform built with Next.js. Collaborate with yo
 - 🎯 **Topic Management** - Create and manage study topics
 - 💬 **Real-time Chat** - Collaborate with classmates through instant messaging
 - 📝 **Problem Board** - Work through problems together in a shared workspace
-- 👥 **Admin Panel** - Manage topics and content
+- 🔔 **Realtime Notifications** - In-app notifications delivered over WebSocket
+- 👥 **Presence Indicators** - See who is online in a topic room
+- 📎 **File Uploads** - Share files and upload avatars with progress feedback
+- ✏️ **Message Controls** - Edit, delete, and react to messages
+- 📄 **Message Pagination** - Load earlier messages on demand
 - 🔐 **User Authentication** - Secure login and signup system
+- 🛡️ **Security Hardening** - Rate limiting and token revocation on logout
 
 ## Getting Started
 
@@ -31,6 +36,9 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 - **Framework**: [Next.js 16](https://nextjs.org/)
 - **Language**: TypeScript
 - **UI**: React 19
+- **API**: Express.js
+- **Realtime**: Socket.IO
+- **Database**: PostgreSQL
 
 ## Project Structure
 
@@ -47,6 +55,21 @@ study-collab/
 │       └── layout/       # Layout components
 └── public/               # Static assets
 ```
+
+## Services
+
+- **Frontend**: http://localhost:3000
+- **API**: http://localhost:3001
+- **WebSocket**: http://localhost:3002
+- **Database**: localhost:5432
+
+## Helpful Scripts
+
+- `./scripts/start-demo.sh` - Start in demo mode (auto-seeds data)
+- `./scripts/start-services.sh` - Start all services
+- `./scripts/stop-services.sh` - Stop all services
+- `./scripts/status.sh` - Service status
+- `./test-script.sh` - Automated E2E tests
 
 ## Learn More
 

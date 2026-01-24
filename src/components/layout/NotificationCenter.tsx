@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { notificationApi } from '@/lib/api';
+import { useState, useEffect, useRef } from 'react';
+import { io, Socket } from 'socket.io-client';
+import { notificationApi, api } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface Notification {
@@ -20,6 +21,7 @@ export function NotificationCenter() {
     const [unreadCount, setUnreadCount] = useState(0);
     const [loading, setLoading] = useState(false);
     const { user } = useAuth();
+    const socketRef = useRef<Socket | null>(null);
 
     useEffect(() => {
         if (user) {
@@ -34,6 +36,37 @@ export function NotificationCenter() {
             
             return () => clearInterval(interval);
         }
+    }, [user]);
+
+    useEffect(() => {
+        if (!user) return;
+
+        const token = api.getToken();
+        if (!token) return;
+
+        const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3002', {
+            transports: ['websocket'],
+            reconnection: true,
+            reconnectionDelay: 1000,
+            reconnectionAttempts: 5,
+            auth: { token }
+        });
+
+        socketRef.current = socket;
+
+        socket.on('notification', (notification: Notification) => {
+            setNotifications((prev) => [notification, ...prev]);
+            setUnreadCount((prev) => prev + 1);
+        });
+
+        socket.on('connect_error', (error) => {
+            console.error('Notification socket error:', error);
+        });
+
+        return () => {
+            socket.disconnect();
+            socketRef.current = null;
+        };
     }, [user]);
 
     const loadNotifications = async () => {

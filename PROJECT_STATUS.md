@@ -1,7 +1,7 @@
 # StudyCollab - Project Status & Context Reference
 
-**Last Updated:** 2024-12-29  
-**Current Version:** v0.5.1  
+**Last Updated:** 2026-01-24  
+**Current Version:** v0.5.2  
 **Status:** Active Development - Production Ready
 
 ---
@@ -24,6 +24,7 @@
 | v0.4 | 2024-12-21 | Database integration & demo mode |
 | v0.5 | 2024-12-29 | File upload, notifications & enhanced messages |
 | **v0.5.1** | **2024-12-29** | **Comprehensive logging system** ⭐ |
+| **v0.5.2** | **2026-01-24** | **Security hardening + realtime notifications** ⭐ |
 
 ---
 
@@ -44,6 +45,8 @@
 - ✅ Protected routes with middleware
 - ✅ Password strength validation
 - ✅ SQL injection prevention
+- ✅ Token blacklist on logout (access + refresh)
+- ✅ Rate limiting (global + auth)
 
 ### 3. Database Schema
 - ✅ Users table
@@ -73,7 +76,7 @@
 - ✅ Mark as read functionality
 - ✅ NotificationCenter component (backend integrated)
 - ✅ Auto-refresh every 30 seconds
-- ⏳ Real-time WebSocket notifications (planned)
+- ✅ Real-time WebSocket notifications
 
 ### 6. Message Features
 - ✅ Message editing with edited_at timestamp
@@ -83,6 +86,7 @@
 - ✅ Edited indicator in UI
 - ✅ Reaction picker interface
 - ✅ Message action buttons
+- ✅ Message pagination (API + UI)
 
 ### 7. Logging & Monitoring System
 - ✅ Winston logger with daily rotation
@@ -105,6 +109,8 @@
 - ✅ User Profile page
 - ✅ Admin Dashboard
 - ✅ Topic management pages
+- ✅ File upload progress indicators
+- ✅ Presence indicators (room online count)
 
 ---
 
@@ -275,6 +281,7 @@ study-collab/
 - **Passed:** 14
 - **Failed:** 0
 - **Success Rate:** 100%
+  - **Last Run:** 2026-01-24
 
 ### Test Coverage
 - ✅ Service Health Checks
@@ -300,7 +307,7 @@ study-collab/
 - ✅ Message editing and deletion
 - ✅ Message reactions
 - ✅ File attachments in chat
-- ✅ Notifications (polling-based)
+- ✅ Notifications (realtime + polling fallback)
 - ✅ Topic creation and management
 
 ### Admin Features
@@ -321,18 +328,13 @@ study-collab/
 ## 📋 Pending Features (from NEXT_STEPS.md)
 
 ### High Priority
-- ⏳ Real-time WebSocket notifications
-- ⏳ User presence indicators
 - ⏳ Advanced search and filtering
-- ⏳ Message pagination in frontend
-- ⏳ File upload progress indicators
 
 ### Medium Priority
 - ⏳ Topic categories and organization
 - ⏳ Admin dashboard enhancements
 - ⏳ Testing infrastructure (unit, integration, E2E)
 - ⏳ Performance optimization
-- ⏳ Security enhancements (rate limiting, token blacklist)
 
 ### Long Term
 - ⏳ Video/audio calls
@@ -498,25 +500,9 @@ NODE_ENV=production         # Environment
 ## 🐛 Known Issues & Limitations
 
 ### Current Limitations
-1. **Real-time Notifications**
-   - Current: Polling every 30 seconds
-   - Planned: WebSocket notifications in v0.6
-
-2. **File Storage**
+1. **File Storage**
    - Current: Local filesystem
    - Production: Should use cloud storage
-
-3. **Message Pagination**
-   - Frontend loads all messages at once
-   - Can be optimized for large threads
-
-4. **Token Blacklist**
-   - Logout doesn't blacklist tokens
-   - Should add for production
-
-5. **Rate Limiting**
-   - Not implemented
-   - Should add for production
 
 ---
 
@@ -555,12 +541,10 @@ const result = await query('SELECT * FROM users WHERE id = $1', [userId]);
 
 ## 🎯 Next Development Priorities
 
-1. **Real-time Notifications** (WebSocket)
-2. **User Presence Indicators**
-3. **Advanced Search & Filtering**
-4. **Message Pagination**
-5. **Rate Limiting**
-6. **Token Blacklist for Logout**
+1. **Advanced Search & Filtering**
+2. **Topic categories and organization**
+3. **Admin dashboard enhancements**
+4. **Testing infrastructure**
 
 ---
 

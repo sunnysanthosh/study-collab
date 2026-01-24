@@ -1,14 +1,14 @@
 # Next Steps - StudyCollab Development Roadmap
 
-**Current Version:** v0.4  
-**Last Updated:** 2024-12-21  
-**Status:** Database Integration & Demo Mode Complete ✅
+**Current Version:** v0.5.2  
+**Last Updated:** 2026-01-24  
+**Status:** Security hardening + realtime notifications complete ✅
 
 ---
 
 ## 📊 Current Status Summary
 
-### ✅ Completed (v0.4)
+### ✅ Completed (v0.5.2)
 - ✅ Complete PostgreSQL database integration
 - ✅ Real JWT authentication system
 - ✅ Password hashing with bcrypt
@@ -17,19 +17,22 @@
 - ✅ Demo mode with seed scripts
 - ✅ Comprehensive documentation
 - ✅ All seed scripts preserved for future use
+- ✅ File uploads with validation + progress UI
+- ✅ Notifications (API + realtime delivery)
+- ✅ Message editing, deletion, reactions, pagination
+- ✅ Presence tracking (room online count)
+- ✅ Token blacklist on logout
+- ✅ Rate limiting + security headers
 
 ---
 
 📊 Roadmap Overview:
 
-🎯 Immediate (v0.5):
-   1. File Upload Functionality
-   2. User Notifications System
-   3. Advanced Search & Filtering
-   4. Message Features (reactions, editing)
-   5. User Presence Indicators
-   6. Topic Categories & Organization
-   7. Admin Dashboard Enhancements
+🎯 Immediate (v0.6):
+   1. Advanced Search & Filtering
+   2. Topic Categories & Organization
+   3. Admin Dashboard Enhancements
+   4. Testing & QA (unit/integration/E2E automation)
 
 🚀 Medium-Term (v0.6-v0.7):
    - Testing & QA
@@ -46,68 +49,12 @@
    - Production Deployment
 
 📋 Technical Debt:
-   - Token blacklist for logout
-   - Rate limiting
-   - Error monitoring
-   - Database indexing
-   - Message pagination
+   - Error monitoring (Sentry or equivalent)
+   - Database indexing review and optimization
 
-## 🎯 Immediate Next Steps (v0.5 - High Priority)
+## 🎯 Immediate Next Steps (v0.6 - High Priority)
 
-### 1. File Upload Functionality ⏳
-**Priority:** High  
-**Status:** Pending  
-**Estimated Effort:** Medium
-
-**Tasks:**
-- [ ] Implement file upload API endpoint
-- [ ] Add file storage (local or cloud - S3/Azure Blob)
-- [ ] Add file upload UI component
-- [ ] Support image, PDF, and document uploads
-- [ ] Add file size and type validation
-- [ ] Implement file preview functionality
-- [ ] Add file sharing in chat messages
-- [ ] Update avatar upload to use real storage
-
-**Files to Create/Modify:**
-- `backend/api/src/controllers/fileController.ts`
-- `backend/api/src/routes/files.ts`
-- `src/components/ui/FileUpload.tsx`
-- `src/components/collab/ChatInterface.tsx` (add file support)
-
----
-
-### 2. User Notifications System ⏳
-**Priority:** High  
-**Status:** Partially Implemented (UI exists, backend needed)  
-**Estimated Effort:** Medium
-
-**Tasks:**
-- [ ] Create notifications database table
-- [ ] Implement notification API endpoints
-- [ ] Add real-time notification delivery via WebSocket
-- [ ] Connect NotificationCenter component to backend
-- [ ] Add notification preferences (email, push, in-app)
-- [ ] Implement notification read/unread status
-- [ ] Add notification badges and counters
-
-**Database Schema:**
-```sql
-CREATE TABLE notifications (
-  id SERIAL PRIMARY KEY,
-  user_id INTEGER REFERENCES users(id),
-  type VARCHAR(50), -- 'message', 'topic_invite', 'system'
-  title VARCHAR(255),
-  message TEXT,
-  link VARCHAR(255),
-  read BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMP DEFAULT NOW()
-);
-```
-
----
-
-### 3. Advanced Search and Filtering ⏳
+### 1. Advanced Search and Filtering ⏳
 **Priority:** Medium  
 **Status:** Basic search exists, needs enhancement  
 **Estimated Effort:** Medium
@@ -128,42 +75,7 @@ CREATE TABLE notifications (
 
 ---
 
-### 4. Message Features Enhancement ⏳
-**Priority:** Medium  
-**Status:** Basic messaging complete  
-**Estimated Effort:** Low-Medium
-
-**Tasks:**
-- [ ] Add message reactions (emoji)
-- [ ] Implement message editing
-- [ ] Add message deletion (with permissions)
-- [ ] Add message threading/replies
-- [ ] Implement message pagination (load more)
-- [ ] Add message search within topic
-- [ ] Add message formatting (markdown support)
-
----
-
-### 5. User Presence Indicators ⏳
-**Priority:** Medium  
-**Status:** Not Started  
-**Estimated Effort:** Low
-
-**Tasks:**
-- [ ] Track user online/offline status
-- [ ] Show typing indicators (partially done)
-- [ ] Add "last seen" timestamps
-- [ ] Show active users in topic rooms
-- [ ] Add user activity status (active, away, busy)
-
-**Implementation:**
-- WebSocket events for presence
-- Database table for user sessions
-- Frontend presence indicators in UI
-
----
-
-### 6. Topic Categories and Organization ⏳
+### 2. Topic Categories and Organization ⏳
 **Priority:** Medium  
 **Status:** Not Started  
 **Estimated Effort:** Medium
@@ -190,7 +102,7 @@ CREATE TABLE topic_favorites (
 
 ---
 
-### 7. Admin Dashboard Enhancements ⏳
+### 3. Admin Dashboard Enhancements ⏳
 **Priority:** Low-Medium  
 **Status:** Basic dashboard exists  
 **Estimated Effort:** Medium
@@ -227,13 +139,10 @@ CREATE TABLE topic_favorites (
 - [ ] Implement lazy loading
 
 ### 3. Security Enhancements
-- [ ] Add rate limiting (express-rate-limit)
-- [ ] Implement token blacklist for logout
 - [ ] Add CSRF protection
 - [ ] Implement input sanitization
 - [ ] Add XSS protection
 - [ ] Set up secrets management
-- [ ] Add security headers
 - [ ] Implement audit logging
 
 ### 4. API Documentation
@@ -302,11 +211,8 @@ CREATE TABLE topic_favorites (
 ## 📋 Technical Debt & Improvements
 
 ### Immediate Fixes Needed
-1. **Token Blacklist** - Logout should blacklist tokens
-2. **Rate Limiting** - Add to prevent abuse
-3. **Error Monitoring** - Add error tracking (Sentry)
-4. **Message Pagination** - Frontend needs pagination
-5. **Database Indexing** - Add indexes for performance
+1. **Error Monitoring** - Add error tracking (Sentry)
+2. **Database Indexing** - Add indexes for performance
 
 ### Code Quality
 - [ ] Add ESLint rules enforcement
@@ -326,17 +232,17 @@ CREATE TABLE topic_favorites (
 
 ## 🎯 Recommended Development Order
 
-### Sprint 1 (v0.5 - Next 2-3 weeks)
-1. File upload functionality
-2. User notifications system (backend)
-3. Message reactions and editing
-4. User presence indicators
-
-### Sprint 2 (v0.5.1 - Following 2 weeks)
+### Sprint 1 (v0.6 - Next 2-3 weeks)
 1. Advanced search and filtering
 2. Topic categories and organization
 3. Admin dashboard enhancements
 4. Testing setup (unit tests)
+
+### Sprint 2 (v0.6.1 - Following 2 weeks)
+1. Performance optimization
+2. Security enhancements
+3. API documentation
+4. CI/CD pipeline
 
 ### Sprint 3 (v0.6 - Following month)
 1. Performance optimization
@@ -366,6 +272,6 @@ CREATE TABLE topic_favorites (
 
 ---
 
-**Last Updated:** 2024-12-21  
-**Next Review:** After v0.5 release
+**Last Updated:** 2026-01-24  
+**Next Review:** After v0.6 planning
 

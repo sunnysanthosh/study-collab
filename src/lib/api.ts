@@ -116,8 +116,8 @@ export const authApi = {
     });
   },
 
-  logout: async () => {
-    return api.post('/api/auth/logout');
+  logout: async (refreshToken?: string | null) => {
+    return api.post('/api/auth/logout', { refreshToken });
   },
 };
 
@@ -205,49 +205,91 @@ export const messageApi = {
 
 // File API
 export const fileApi = {
-  uploadFile: async (file: File, type: string = 'general') => {
+  uploadFile: async (
+    file: File,
+    type: string = 'general',
+    onProgress?: (progress: number) => void
+  ) => {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('type', type);
-    
+
     const token = api.getToken();
-    const response = await fetch(`${API_URL}/api/files/upload`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-      body: formData,
+
+    return new Promise<{ data?: any; error?: string }>((resolve) => {
+      const request = new XMLHttpRequest();
+      request.open('POST', `${API_URL}/api/files/upload`);
+      if (token) {
+        request.setRequestHeader('Authorization', `Bearer ${token}`);
+      }
+
+      request.upload.onprogress = (event) => {
+        if (event.lengthComputable && onProgress) {
+          const percent = (event.loaded / event.total) * 100;
+          onProgress(percent);
+        }
+      };
+
+      request.onload = () => {
+        try {
+          const response = JSON.parse(request.responseText);
+          if (request.status >= 200 && request.status < 300) {
+            resolve({ data: response });
+          } else {
+            resolve({ error: response.error || 'Upload failed' });
+          }
+        } catch {
+          resolve({ error: 'Upload failed' });
+        }
+      };
+
+      request.onerror = () => {
+        resolve({ error: 'Upload failed' });
+      };
+
+      request.send(formData);
     });
-    
-    if (!response.ok) {
-      const error = await response.json();
-      return { error: error.error || 'Upload failed' };
-    }
-    
-    const data = await response.json();
-    return { data };
   },
 
-  uploadAvatar: async (file: File) => {
+  uploadAvatar: async (file: File, onProgress?: (progress: number) => void) => {
     const formData = new FormData();
     formData.append('file', file);
-    
+
     const token = api.getToken();
-    const response = await fetch(`${API_URL}/api/files/avatar`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-      body: formData,
+
+    return new Promise<{ data?: any; error?: string }>((resolve) => {
+      const request = new XMLHttpRequest();
+      request.open('POST', `${API_URL}/api/files/avatar`);
+      if (token) {
+        request.setRequestHeader('Authorization', `Bearer ${token}`);
+      }
+
+      request.upload.onprogress = (event) => {
+        if (event.lengthComputable && onProgress) {
+          const percent = (event.loaded / event.total) * 100;
+          onProgress(percent);
+        }
+      };
+
+      request.onload = () => {
+        try {
+          const response = JSON.parse(request.responseText);
+          if (request.status >= 200 && request.status < 300) {
+            resolve({ data: response });
+          } else {
+            resolve({ error: response.error || 'Upload failed' });
+          }
+        } catch {
+          resolve({ error: 'Upload failed' });
+        }
+      };
+
+      request.onerror = () => {
+        resolve({ error: 'Upload failed' });
+      };
+
+      request.send(formData);
     });
-    
-    if (!response.ok) {
-      const error = await response.json();
-      return { error: error.error || 'Upload failed' };
-    }
-    
-    const data = await response.json();
-    return { data };
   },
 
   getFileUrl: (path: string) => {

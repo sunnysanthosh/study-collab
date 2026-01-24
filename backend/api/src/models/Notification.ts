@@ -27,7 +27,17 @@ export const NotificationModel = {
        RETURNING *`,
       [data.user_id, data.type, data.title, data.message || null, data.link || null]
     );
-    return result.rows[0];
+    const notification = result.rows[0];
+
+    try {
+      await pool.query('NOTIFY notification_created, $1', [
+        JSON.stringify({ userId: notification.user_id, notification }),
+      ]);
+    } catch {
+      // Notification delivery is best-effort
+    }
+
+    return notification;
   },
 
   async getUserNotifications(userId: string, limit: number = 50, offset: number = 0): Promise<Notification[]> {
