@@ -119,7 +119,8 @@ const createMessageNotifications = async (topicId: string, senderId: string, con
       ]
     );
     const notification = notificationResult.rows[0];
-    await pool.query('NOTIFY notification_created, $1', [
+    await pool.query('SELECT pg_notify($1, $2)', [
+      'notification_created',
       JSON.stringify({ userId: notification.user_id, notification }),
     ]);
   }

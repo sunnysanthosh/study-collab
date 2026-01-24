@@ -42,7 +42,10 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-app.use(generalLimiter);
+const disableRateLimit = process.env.DISABLE_RATE_LIMIT === 'true';
+if (!disableRateLimit) {
+  app.use(generalLimiter);
+}
 
 // Request logging (before routes)
 app.use(requestLogger);
@@ -57,7 +60,7 @@ app.use('/api/files/uploads', express.static(path.join(process.cwd(), 'uploads')
 }));
 
 // Routes
-app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/auth', disableRateLimit ? authRoutes : authLimiter, authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/topics', topicRoutes);
 app.use('/api/messages', messageRoutes);

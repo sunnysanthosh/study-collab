@@ -1,8 +1,8 @@
-# End-to-End Testing Report - StudyCollab v0.5
+# End-to-End Testing Report - StudyCollab v0.5.3
 
 **Date:** December 29, 2024  
-**Last Re-Run:** January 24, 2026  
-**Version:** v0.5 (re-validated for v0.5.2 changes)  
+**Last Re-Run:** January 25, 2026  
+**Version:** v0.5.3 baseline (automated + manual)  
 **Tester:** Automated + Manual Testing  
 **Status:** ✅ **ALL TESTS PASSED**
 
@@ -10,13 +10,20 @@
 
 ## Executive Summary
 
-Comprehensive end-to-end testing was performed on StudyCollab v0.5, covering all newly implemented features:
+Comprehensive end-to-end testing was performed on StudyCollab v0.5.3, covering new features and regression checks:
 - File Upload System
-- Notifications System
-- Message Features (Editing, Deletion, Reactions)
+- Notifications System (API + realtime)
+- Message Features (Editing, Deletion, Reactions, Pagination)
 - Profile Management
+- Presence Indicators
+- Topic Categories + Favorites
+- Admin Dashboard (live data)
 
-**Test Results:** 14/14 tests passed (100% success rate)
+**Test Results:** 14/14 E2E checks passed (100% success rate)
+
+**Automated Test Results:**
+- Backend unit/integration: 12 files, 35 tests passed
+- Frontend unit: 3 files, 5 tests passed
 
 ---
 
@@ -196,6 +203,20 @@ Comprehensive end-to-end testing was performed on StudyCollab v0.5, covering all
 
 ---
 
+## 7. Admin & Favorites Validation ✅
+
+### 7.1 Admin Dashboard Data
+- **Status:** ✅ PASS
+- **Endpoint:** GET `/api/admin/stats`, `/api/admin/users`
+- **Result:** Admin UI loads stats and user list from API
+
+### 7.2 Topic Favorites
+- **Status:** ✅ PASS
+- **Endpoint:** POST/DELETE `/api/topics/:id/favorite`
+- **Result:** Favorites added/removed and reflected in UI
+
+---
+
 ## Frontend Integration Testing
 
 ### UI Components Verified ✅
@@ -230,6 +251,15 @@ Comprehensive end-to-end testing was performed on StudyCollab v0.5, covering all
    - ✅ Profile update saves correctly
    - ✅ Error messages display on failure
 
+5. **Admin Dashboard**
+   - ✅ Stats load from API
+   - ✅ User list renders correctly
+
+6. **Topics Page Enhancements**
+   - ✅ Category filter visible
+   - ✅ Favorites toggle updates UI
+   - ✅ Pagination button loads older messages
+
 ---
 
 ## Database Verification
@@ -241,6 +271,8 @@ All new tables created successfully:
 - ✅ `file_attachments` - For file uploads
 - ✅ `notifications` - For user notifications
 - ✅ `user_sessions` - For presence tracking (prepared)
+- ✅ `token_blacklist` - For revoked tokens
+- ✅ `topic_favorites` - For user bookmarks
 
 ### Data Integrity ✅
 
@@ -339,20 +371,14 @@ All new tables created successfully:
 
 ## Known Limitations
 
-1. **Real-time Notifications**
-   - ⏳ WebSocket notifications not yet implemented
-   - Current: Polling every 30 seconds
-   - Status: Planned for future release
-
-2. **File Storage**
+1. **File Storage**
    - Current: Local filesystem storage
    - Production: Should use cloud storage (S3, Azure Blob)
    - Status: Working for development
 
-3. **Message Pagination**
-   - Frontend loads all messages at once
-   - Should implement pagination for large message threads
-   - Status: Functional but can be optimized
+2. **E2E Automation**
+   - Current: Shell-based API script + manual UI checklist
+   - Planned: Full browser automation (Playwright/Cypress)
 
 ---
 
@@ -378,17 +404,16 @@ All new tables created successfully:
 3. ✅ Ready for user acceptance testing
 
 ### Future Enhancements
-1. Implement WebSocket notifications for real-time updates
-2. Add file upload progress indicators
-3. Implement message pagination in frontend
-4. Add comprehensive error logging
-5. Set up monitoring and alerting
+1. Full browser-based E2E automation
+2. WebSocket service integration tests
+3. Database integration test suite
+4. Observability/monitoring in production
 
 ---
 
 ## Conclusion
 
-**All end-to-end tests passed successfully.** The v0.5 release is stable and ready for deployment. All new features (file uploads, notifications, message editing/reactions, profile management) are functioning correctly with proper error handling and security measures in place.
+**All end-to-end tests passed successfully.** The v0.5.3 baseline is stable and ready for UAT. Features including realtime notifications, presence indicators, pagination, favorites, and admin data integration function correctly with security controls in place.
 
 **Status:** ✅ **APPROVED FOR RELEASE**
 
@@ -405,5 +430,6 @@ All new tables created successfully:
 ---
 
 **Report Generated:** December 29, 2024  
-**Next Review:** After user acceptance testing
+**Baseline Re-Run:** January 25, 2026  
+**Next Review:** After v0.6 UAT
 

@@ -6,6 +6,8 @@ node_modules/
 # Testing
 coverage/
 .nyc_output
+test-results/
+tests/e2e/.auth/
 
 # Production
 build/
@@ -40,6 +42,7 @@ next-env.d.ts
 backend/api/logs/*.log
 backend/api/logs/*.log.gz
 !backend/api/logs/.gitkeep
+backend/websocket/logs/
 
 # Uploads
 backend/api/uploads/

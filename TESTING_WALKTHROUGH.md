@@ -10,6 +10,9 @@
 ```bash
 cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab
 ./scripts/start-services.sh
+
+# Or use the consolidated dev script
+./start-dev.sh
 ```
 
 ### 2. Run Database Migration
@@ -33,6 +36,31 @@ open http://localhost:3000
 ---
 
 ## 📝 Step-by-Step Testing
+
+### Automated Checks (Recommended First)
+```bash
+# Backend unit/integration
+cd backend/api
+npm test
+
+# Frontend unit tests
+cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab
+npm test
+
+# WebSocket integration tests
+cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab/backend/websocket
+npm test
+
+# API-focused E2E script (services must be running)
+cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab
+./test-script.sh
+
+# Browser E2E (Playwright, services must be running)
+npx playwright install
+# Optional: disable rate limiting for repeated E2E logins
+# DISABLE_RATE_LIMIT=true npm run dev  (run in backend/api)
+npm run test:e2e
+```
 
 ### Test 1: User Registration ✅
 
@@ -140,6 +168,8 @@ fetch('http://localhost:3001/api/topics', {
 - ✅ Search works
 - ✅ Filters work
 - ✅ Clicking a topic card navigates to topic room
+- ✅ Category filter visible when categories exist
+- ✅ Favorite toggle visible when logged in
 
 ---
 
@@ -156,6 +186,8 @@ fetch('http://localhost:3001/api/topics', {
 - ✅ Message appears immediately
 - ✅ Message persists after page refresh
 - ✅ Your name/avatar shows correctly
+- ✅ Presence count updates for room members
+- ✅ Notification received by other members
 
 **Check Browser Console:**
 ```javascript
@@ -193,6 +225,7 @@ fetch(`http://localhost:3001/api/messages/topic/${topicId}`, {
 - ✅ Messages in chronological order
 - ✅ All messages display correctly
 - ✅ User info (name, avatar) shows
+- ✅ "Load earlier messages" fetches older items
 
 ---
 
@@ -251,6 +284,32 @@ fetch('http://localhost:3001/api/users/profile', {
 .then(r => r.json())
 .then(data => console.log('Updated:', data));
 ```
+
+---
+
+### Test 9: Favorites ✅
+
+**Steps:**
+1. Navigate to http://localhost:3000/topics
+2. Toggle favorite on a topic
+3. Refresh and confirm favorite persists
+
+**Expected:**
+- ✅ Favorite toggle updates UI
+- ✅ Favorite persists after reload
+
+---
+
+### Test 10: Admin Dashboard ✅
+
+**Steps:**
+1. Login as admin
+2. Navigate to http://localhost:3000/admin
+3. Verify stats and user list load
+
+**Expected:**
+- ✅ Stats load from API
+- ✅ User list renders with name/email/role/joined
 
 ---
 

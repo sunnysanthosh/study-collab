@@ -1,7 +1,7 @@
 # End-to-End Testing Guide - Phase 3
 
-**Date:** 2024-12-21  
-**Version:** v0.3
+**Date:** 2026-01-25  
+**Version:** v0.5.3
 
 ---
 
@@ -12,6 +12,9 @@
 ```bash
 cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab
 ./scripts/start-services.sh
+
+# Or use the consolidated dev script
+./start-dev.sh
 ```
 
 **Expected:** All services start successfully
@@ -40,6 +43,28 @@ curl http://localhost:3000
 
 # Check database (if Docker)
 docker exec studycollab-db pg_isready -U studycollab
+```
+
+### 4. Optional Automated Checks
+```bash
+# Backend unit/integration
+cd backend/api
+npm test
+
+# Frontend unit tests
+cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab
+npm test
+
+# WebSocket integration tests
+cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab/backend/websocket
+npm test
+
+# Browser E2E (Playwright, services must be running)
+cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab
+npx playwright install
+# Optional: disable rate limiting for repeated E2E logins
+# DISABLE_RATE_LIMIT=true npm run dev  (run in backend/api)
+npm run test:e2e
 ```
 
 ---
@@ -158,6 +183,8 @@ SELECT * FROM topic_members WHERE user_id = '<user_id>';
 - ✅ Message saved to database
 - ✅ Message persists after page refresh
 - ✅ Other users see message (if multiple browsers)
+- ✅ Presence count updates when users join/leave
+- ✅ Notification event delivered to other members
 
 **Verify in Database:**
 ```sql
@@ -240,8 +267,35 @@ SELECT name, email FROM users WHERE id = '<user_id>';
 - ✅ Search filters topics correctly
 - ✅ Subject filter works
 - ✅ Tag filter works
+- ✅ Category filter works (if categories exist)
 - ✅ Filters can be combined
 - ✅ Clear filters works
+
+---
+
+### Test 10b: Favorites
+
+**Steps:**
+1. Navigate to http://localhost:3000/topics
+2. Toggle favorite on a topic (star icon)
+3. Refresh and confirm favorite persists
+
+**Expected Results:**
+- ✅ Favorite toggle updates UI immediately
+- ✅ Favorite persists after reload
+
+---
+
+### Test 10c: Admin Dashboard
+
+**Steps:**
+1. Login as admin user
+2. Navigate to http://localhost:3000/admin
+3. Verify stats and user list load
+
+**Expected Results:**
+- ✅ Stats load from API
+- ✅ User list renders with name/email/role/joined
 
 ---
 
@@ -515,5 +569,5 @@ Time: [Duration if relevant]
 ---
 
 **Testing Status:** Ready to begin  
-**Last Updated:** 2024-12-21
+**Last Updated:** 2026-01-25
 

@@ -30,7 +30,8 @@ export const NotificationModel = {
     const notification = result.rows[0];
 
     try {
-      await pool.query('NOTIFY notification_created, $1', [
+      await pool.query('SELECT pg_notify($1, $2)', [
+        'notification_created',
         JSON.stringify({ userId: notification.user_id, notification }),
       ]);
     } catch {

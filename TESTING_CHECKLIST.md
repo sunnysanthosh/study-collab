@@ -8,6 +8,7 @@ Use this checklist to systematically test all features of the application.
 - [ ] Environment variables configured
 - [ ] Database running (PostgreSQL)
 - [ ] All services started (Frontend, API, WebSocket)
+- [ ] Playwright browsers installed (`npx playwright install`)
 
 ## Quick Start Commands
 
@@ -37,6 +38,25 @@ Terminal 3 - WebSocket:
 ```bash
 cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab/backend/websocket
 npm run dev
+```
+
+### Automated Tests (Optional)
+```bash
+# Backend unit/integration
+cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab/backend/api
+npm test
+
+# Frontend unit tests
+cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab
+npm test
+
+# WebSocket integration tests
+cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab/backend/websocket
+npm test
+
+# Browser E2E (Playwright, services must be running)
+cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab
+npm run test:e2e
 ```
 
 ---
@@ -122,6 +142,7 @@ npm run dev
 - [ ] Filter panel shows:
   - [ ] "All" button
   - [ ] Tag filter buttons (Math, Physics, CS, Chemistry, etc.)
+  - [ ] Category filter buttons (when categories exist)
 - [ ] Topics display in grid layout
 - [ ] Each topic card shows:
   - [ ] Title
@@ -129,6 +150,7 @@ npm run dev
   - [ ] Active user count with pulsing indicator
   - [ ] Tags
   - [ ] "Join Room" button
+- [ ] Favorite toggle is visible when logged in
 - [ ] Search functionality:
   - [ ] Type in search → Topics filter in real-time
   - [ ] Clear search → All topics show
@@ -164,6 +186,7 @@ npm run dev
 - [ ] Chat Interface displays:
   - [ ] Header with "Live Chat" title
   - [ ] Message count
+  - [ ] Online users count/presence indicator
   - [ ] Connection status indicator
   - [ ] Messages area (scrollable)
   - [ ] Input field at bottom
@@ -175,6 +198,8 @@ npm run dev
   - [ ] Type message → Input updates
   - [ ] Click Send → Message appears (if WebSocket connected)
   - [ ] Typing indicator works (if WebSocket connected)
+  - [ ] "Load earlier messages" loads older history
+  - [ ] File upload progress indicator updates during upload
 - [ ] Responsive: Stacks vertically on mobile
 - [ ] No console errors
 
@@ -228,10 +253,9 @@ npm run dev
   - [ ] Online Now
 - [ ] "Add New Topic" button is visible
 - [ ] User management table displays:
-  - [ ] Column headers (Name, Email, Requested Topic, Status, Actions)
-  - [ ] User rows with data
-  - [ ] Status badges (Pending/Active)
-  - [ ] Action buttons (Approve/View)
+  - [ ] Column headers (Name, Email, Role, Joined)
+  - [ ] User rows with real data
+  - [ ] Role badges render correctly
 - [ ] Table rows have hover effects
 - [ ] "Add New Topic" button navigates to `/admin/add-topic`
 - [ ] No console errors
@@ -242,6 +266,9 @@ npm run dev
 - [ ] Page loads correctly
 - [ ] Form displays:
   - [ ] Topic Title field
+  - [ ] Category field
+  - [ ] Subject field
+  - [ ] Difficulty field
   - [ ] Description textarea
   - [ ] Tags field
 - [ ] All fields accept input
@@ -305,6 +332,22 @@ curl -X POST http://localhost:3001/api/topics \
 - [ ] Returns 201 status
 - [ ] Returns created topic
 
+**Favorites:**
+```bash
+curl -X POST http://localhost:3001/api/topics/TOPIC_ID/favorite \
+  -H "Authorization: Bearer YOUR_TOKEN"
+curl -X DELETE http://localhost:3001/api/topics/TOPIC_ID/favorite \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+- [ ] Favorite add/remove returns 200
+
+**Admin Stats (admin token):**
+```bash
+curl http://localhost:3001/api/admin/stats \
+  -H "Authorization: Bearer ADMIN_TOKEN"
+```
+- [ ] Returns stats payload
+
 ---
 
 ## 3. WebSocket Testing
@@ -337,6 +380,11 @@ curl -X POST http://localhost:3001/api/topics \
    - [ ] "user-left" event received
    - [ ] User list updates
 
+### Presence/Notification Test
+1. Open two clients:
+   - [ ] Presence count updates when user connects/disconnects
+   - [ ] Notification event received for new message
+
 ---
 
 ## 4. Integration Testing
@@ -352,9 +400,10 @@ curl -X POST http://localhost:3001/api/topics \
 8. [ ] Verify topic room loads
 9. [ ] Send a message in chat
 10. [ ] Check message appears
-11. [ ] Navigate to profile
-12. [ ] Edit profile information
-13. [ ] Save changes
+11. [ ] Toggle favorite on a topic
+12. [ ] Navigate to profile
+13. [ ] Edit profile information
+14. [ ] Save changes
 
 ---
 

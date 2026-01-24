@@ -1,12 +1,11 @@
 # Quick End-to-End Testing Guide
 
-## 🚀 Current Status
+## ✅ Service Checklist
 
-**Running Services:**
-- ✅ API: http://localhost:3001 (Running)
-- ✅ WebSocket: http://localhost:3002 (Running)
-- ⚠️ Frontend: http://localhost:3000 (Needs to start)
-- ⚠️ Database: Port 5432 (Needs Docker or local PostgreSQL)
+- [ ] API running: http://localhost:3001
+- [ ] WebSocket running: http://localhost:3002
+- [ ] Frontend running: http://localhost:3000
+- [ ] Database running: localhost:5432
 
 ---
 
@@ -108,6 +107,35 @@ localStorage.getItem('studycollab_token')
 // Check user
 localStorage.getItem('studycollab_user')
 // Should return user object
+```
+
+---
+
+## 🧪 Automated Tests (Optional but Recommended)
+
+```bash
+# Backend unit/integration
+cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab/backend/api
+npm test
+
+# Frontend unit tests
+cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab
+npm test
+
+# WebSocket integration tests
+cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab/backend/websocket
+npm test
+
+# API-focused E2E script (services must be running)
+cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab
+./test-script.sh
+
+# Browser E2E (Playwright, services must be running)
+npx playwright install
+
+# Optional: disable rate limiting for repeated E2E logins
+# DISABLE_RATE_LIMIT=true npm run dev  (run in backend/api)
+npm run test:e2e
 ```
 
 ---

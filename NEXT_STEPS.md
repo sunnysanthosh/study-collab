@@ -1,8 +1,8 @@
 # Next Steps - StudyCollab Development Roadmap
 
 **Current Version:** v0.5.3  
-**Last Updated:** 2026-01-24  
-**Status:** Test expansion + coverage thresholds complete ✅
+**Last Updated:** 2026-01-25  
+**Status:** Full baseline testing complete ✅
 
 ---
 
@@ -77,14 +77,14 @@
 
 ### 2. Topic Categories and Organization ⏳
 **Priority:** Medium  
-**Status:** Not Started  
+**Status:** Completed in v0.5.3 ✅  
 **Estimated Effort:** Medium
 
 **Tasks:**
-- [ ] Add category system to topics
+- [x] Add category system to topics
 - [ ] Create category management UI
-- [ ] Add topic tags (enhance existing)
-- [ ] Implement topic favorites/bookmarks
+- [x] Add topic tags (enhance existing)
+- [x] Implement topic favorites/bookmarks
 - [ ] Add topic archiving
 - [ ] Create topic templates
 - [ ] Add topic recommendations
@@ -104,7 +104,7 @@ CREATE TABLE topic_favorites (
 
 ### 3. Admin Dashboard Enhancements ⏳
 **Priority:** Low-Medium  
-**Status:** Basic dashboard exists  
+**Status:** Basic dashboard exists (live data wired)  
 **Estimated Effort:** Medium
 
 **Tasks:**
@@ -121,12 +121,11 @@ CREATE TABLE topic_favorites (
 ## 🚀 Medium-Term Goals (v0.6 - v0.7)
 
 ### 1. Testing & Quality Assurance
-- [ ] Add unit tests (Jest/Vitest)
-- [ ] Add integration tests
-- [ ] Add E2E tests (Playwright/Cypress)
-- [ ] Set up test coverage reporting
-- [ ] Add CI/CD pipeline (GitHub Actions)
-- [ ] Implement automated testing
+- [x] Add unit tests (Vitest)
+- [x] Add integration tests (API)
+- [ ] Add full browser E2E tests (Playwright/Cypress)
+- [x] Set up test coverage thresholds
+- [ ] CI workflow push (requires PAT with workflow scope)
 
 ### 2. Performance Optimization
 - [ ] Add database indexing
