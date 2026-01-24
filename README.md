@@ -72,6 +72,7 @@ study-collab/
 - `./scripts/status.sh` - Service status
 - `./test-script.sh` - Automated E2E tests
 - `npm --prefix apps/web test` - Run frontend unit tests
+- `npm run test:all` - Run frontend, API, and WebSocket tests
 
 ## Learn More
 

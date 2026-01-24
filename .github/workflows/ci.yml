@@ -6,7 +6,42 @@ on:
   pull_request:
 
 jobs:
+  paths:
+    runs-on: ubuntu-latest
+    outputs:
+      web: ${{ steps.filter.outputs.web }}
+      api: ${{ steps.filter.outputs.api }}
+      websocket: ${{ steps.filter.outputs.websocket }}
+      e2e: ${{ steps.filter.outputs.e2e }}
+      ci: ${{ steps.filter.outputs.ci }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Detect changes
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            web:
+              - "apps/web/**"
+            api:
+              - "services/api/**"
+            websocket:
+              - "services/websocket/**"
+            e2e:
+              - "apps/web/**"
+              - "services/api/**"
+              - "services/websocket/**"
+              - "scripts/run-e2e.sh"
+              - "docker-compose.yml"
+            ci:
+              - ".github/workflows/**"
+              - "package.json"
+              - "scripts/**"
+
   backend-tests:
+    needs: paths
+    if: needs.paths.outputs.api == 'true' || needs.paths.outputs.ci == 'true'
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -41,6 +76,8 @@ jobs:
         run: npm test
 
   frontend-tests:
+    needs: paths
+    if: needs.paths.outputs.web == 'true' || needs.paths.outputs.ci == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -59,6 +96,8 @@ jobs:
         run: npm test
 
   websocket-tests:
+    needs: paths
+    if: needs.paths.outputs.websocket == 'true' || needs.paths.outputs.api == 'true' || needs.paths.outputs.ci == 'true'
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -98,6 +137,8 @@ jobs:
         run: npm test
 
   e2e-tests:
+    needs: paths
+    if: needs.paths.outputs.e2e == 'true' || needs.paths.outputs.ci == 'true'
     runs-on: ubuntu-latest
     services:
       postgres:

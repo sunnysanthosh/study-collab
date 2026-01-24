@@ -1,6 +1,10 @@
 {
   "name": "study-collab-root",
   "private": true,
+  "workspaces": [
+    "apps/*",
+    "services/*"
+  ],
   "scripts": {
     "dev:web": "npm --prefix apps/web run dev",
     "dev:api": "npm --prefix services/api run dev",
@@ -12,6 +16,7 @@
     "test:ws": "npm --prefix services/websocket test",
     "test:e2e": "npm --prefix apps/web run test:e2e",
     "test:e2e:ui": "npm --prefix apps/web run test:e2e:ui",
+    "test:all": "npm run test:web && npm run test:api && npm run test:ws",
     "lint:web": "npm --prefix apps/web run lint"
   }
 }
