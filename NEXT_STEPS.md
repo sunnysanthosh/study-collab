@@ -1,8 +1,8 @@
 # Next Steps - StudyCollab Development Roadmap
 
-**Current Version:** v0.5.3  
+**Current Version:** v0.5.4  
 **Last Updated:** 2026-01-25  
-**Status:** Full baseline testing complete ✅
+**Status:** E2E automation + CI stabilized ✅
 
 ---
 
@@ -122,10 +122,10 @@ CREATE TABLE topic_favorites (
 
 ### 1. Testing & Quality Assurance
 - [x] Add unit tests (Vitest)
-- [x] Add integration tests (API)
-- [ ] Add full browser E2E tests (Playwright/Cypress)
+- [x] Add integration tests (API + WebSocket)
+- [x] Add full browser E2E tests (Playwright)
 - [x] Set up test coverage thresholds
-- [ ] CI workflow push (requires PAT with workflow scope)
+- [x] CI workflow push (requires PAT with workflow scope)
 
 ### 2. Performance Optimization
 - [ ] Add database indexing

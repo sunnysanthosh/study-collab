@@ -57,6 +57,9 @@ npm test
 # Browser E2E (Playwright, services must be running)
 cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab
 npm run test:e2e
+
+# One-command runner (starts services, seeds, runs Playwright, stops)
+./scripts/run-e2e.sh
 ```
 
 ---

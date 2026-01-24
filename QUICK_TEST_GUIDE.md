@@ -132,6 +132,8 @@ cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab
 
 # Browser E2E (Playwright, services must be running)
 npx playwright install
+# One-command runner (starts services, seeds, runs Playwright, stops)
+./scripts/run-e2e.sh
 
 # Optional: disable rate limiting for repeated E2E logins
 # DISABLE_RATE_LIMIT=true npm run dev  (run in backend/api)

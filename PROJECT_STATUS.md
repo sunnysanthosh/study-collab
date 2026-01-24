@@ -1,7 +1,7 @@
 # StudyCollab - Project Status & Context Reference
 
 **Last Updated:** 2026-01-25  
-**Current Version:** v0.5.3  
+**Current Version:** v0.5.4  
 **Status:** Active Development - Production Ready
 
 ---
@@ -26,6 +26,7 @@
 | **v0.5.1** | **2024-12-29** | **Comprehensive logging system** ⭐ |
 | **v0.5.2** | **2026-01-24** | **Security hardening + realtime notifications** ⭐ |
 | **v0.5.3** | **2026-01-24** | **Expanded tests + coverage thresholds** ⭐ |
+| **v0.5.4** | **2026-01-25** | **E2E automation + CI stabilization** ⭐ |
 
 ---
 
@@ -277,17 +278,16 @@ study-collab/
 
 ## 🧪 Testing Status
 
-### End-to-End Testing (v0.5.3)
-- **Total Tests:** 14
-- **Passed:** 14
-- **Failed:** 0
-- **Success Rate:** 100%
-  - **Last Run:** 2026-01-25
+### End-to-End Testing (v0.5.4)
+- **Playwright E2E:** 5 tests passing
+- **API Script:** 14/14 pass
+- **Last Run:** 2026-01-25
 
 ### Automated Tests
-- **Backend:** 12 files, 35 tests passing
-- **Frontend:** 3 files, 5 tests passing
-  - **CI Workflow:** `.github/workflows/ci.yml` pending push (requires PAT with workflow scope)
+- **Backend:** 13 files, 37 tests passing
+- **Frontend:** 4 files, 6 tests passing
+- **WebSocket:** 1 file, 1 test passing
+- **CI Workflow:** `.github/workflows/ci.yml` pushed with Postgres + E2E jobs
 
 ### Test Coverage
 - ✅ Service Health Checks
@@ -301,7 +301,8 @@ study-collab/
 - ✅ Favorites/bookmarks
 
 ### Test Scripts
-- `test-script.sh` - Automated E2E testing
+- `test-script.sh` - Automated API E2E testing
+- `scripts/run-e2e.sh` - Full Playwright E2E automation
 - `test-logging.sh` - Logging system test
 
 ---

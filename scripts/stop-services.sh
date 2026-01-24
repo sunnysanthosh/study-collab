@@ -13,7 +13,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-PROJECT_ROOT="/Users/santhoshsrinivas/MyApps/iLearn/study-collab"
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LOG_DIR="/tmp/studycollab"
 PID_FILE="$LOG_DIR/pids.txt"
 STATUS_FILE="$LOG_DIR/status.txt"

@@ -5,6 +5,30 @@ All notable changes to StudyCollab will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.4] - 2026-01-25
+
+### Added
+- Playwright E2E runner script with service bootstrap and teardown
+- Chat/presence/notification E2E coverage in Playwright
+- Database-backed integration tests for API and WebSocket services
+- CI job for Playwright E2E with Postgres service
+
+### Changed
+- CI now provisions Postgres for API/WebSocket integration tests
+- Rate limiting can be disabled for test automation (`DISABLE_RATE_LIMIT=true`)
+- Service scripts resolve project root dynamically for portability
+
+### Fixed
+- Postgres notification delivery now uses `pg_notify` for realtime events
+
+### Testing
+- Backend tests: 13 files, 37 tests passing
+- WebSocket tests: 1 file, 1 test passing
+- Frontend tests: 4 files, 6 tests passing
+- Playwright E2E: 5 tests passing
+
+---
+
 ## [0.5.3] - 2026-01-25
 
 ### Added
