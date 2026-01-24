@@ -1,267 +1,98 @@
 # Next Steps - StudyCollab Development Roadmap
 
-**Current Version:** v0.5.4  
+**Current Version:** v0.5.6  
 **Last Updated:** 2026-01-25  
-**Status:** E2E automation + CI stabilized ✅
+**Status:** Redis broker added, CI + E2E stable
 
 ---
 
-## 📊 Current Status Summary
+## Current Status Summary
 
-### ✅ Completed (v0.5.3)
-- ✅ Complete PostgreSQL database integration
-- ✅ Real JWT authentication system
-- ✅ Password hashing with bcrypt
-- ✅ WebSocket message persistence
-- ✅ Frontend-backend full integration
-- ✅ Demo mode with seed scripts
-- ✅ Comprehensive documentation
-- ✅ All seed scripts preserved for future use
-- ✅ File uploads with validation + progress UI
-- ✅ Notifications (API + realtime delivery)
-- ✅ Message editing, deletion, reactions, pagination
-- ✅ Presence tracking (room online count)
-- ✅ Token blacklist on logout
-- ✅ Rate limiting + security headers
+### Completed (v0.5.x)
+- PostgreSQL database integration
+- JWT authentication + token blacklist on logout
+- WebSocket message persistence + presence
+- Notifications (API + realtime delivery + Redis broker)
+- File uploads (validation + progress UI)
+- Demo mode with seed scripts
+- Unit/integration/E2E tests + coverage thresholds
+- CI workflow with service dependencies
 
 ---
 
-📊 Roadmap Overview:
+## Prioritized Roadmap
 
-🎯 Immediate (v0.6):
-   1. Advanced Search & Filtering
-   2. Topic Categories & Organization
-   3. Admin Dashboard Enhancements
-   4. Testing & QA (unit/integration/E2E automation)
+### Short Term (2–4 weeks)
+1. Advanced Search and Filtering
+   - Topic search (full-text)
+   - Filters (subject, difficulty, date, popularity)
+   - Search suggestions + history
+   - Message search within topics
+2. Admin Dashboard Enhancements
+   - User management (CRUD)
+   - Topic moderation tools
+   - Analytics cards + system health
+3. Performance + Indexing (targeted)
+   - Add DB indexes for topic, message, and notification queries
+   - Measure API latency before/after
 
-🚀 Medium-Term (v0.6-v0.7):
-   - Testing & QA
-   - Performance Optimization
-   - Security Enhancements
-   - API Documentation
-   - Search Functionality
+### Medium Term (v0.6–v0.7)
+- Security enhancements (CSRF, input sanitization, XSS protection)
+- API documentation (OpenAPI/Swagger + examples)
+- Search expansion (ranking, analytics)
+- Redis caching where it benefits read-heavy routes
 
-🌟 Long-Term (v0.8+):
-   - Video/Audio Calls
-   - Collaborative Whiteboard
-   - Mobile App
-   - AI/ML Features
-   - Production Deployment
-
-📋 Technical Debt:
-   - Error monitoring (Sentry or equivalent)
-   - Database indexing review and optimization
-
-## 🎯 Immediate Next Steps (v0.6 - High Priority)
-
-### 1. Advanced Search and Filtering ⏳
-**Priority:** Medium  
-**Status:** Basic search exists, needs enhancement  
-**Estimated Effort:** Medium
-
-**Tasks:**
-- [ ] Enhance topic search with full-text search
-- [ ] Add filters (subject, difficulty, date, popularity)
-- [ ] Implement search history
-- [ ] Add search suggestions/autocomplete
-- [ ] Add message search within topics
-- [ ] Implement user search
-- [ ] Add saved searches feature
-
-**Technologies to Consider:**
-- PostgreSQL full-text search
-- Elasticsearch (for advanced search)
-- Redis (for search caching)
+### Long Term (v0.8+)
+- Collaboration upgrades (audio/video, whiteboard, code editor)
+- Mobile app (React Native + push notifications)
+- Analytics + insights (learning progress, engagement)
+- Production infra (K8s, monitoring, autoscaling)
 
 ---
 
-### 2. Topic Categories and Organization ⏳
-**Priority:** Medium  
-**Status:** Completed in v0.5.3 ✅  
-**Estimated Effort:** Medium
+## Concrete Implementation Plan (Medium Scope: 2–4 Weeks)
 
-**Tasks:**
-- [x] Add category system to topics
-- [ ] Create category management UI
-- [x] Add topic tags (enhance existing)
-- [x] Implement topic favorites/bookmarks
-- [ ] Add topic archiving
-- [ ] Create topic templates
-- [ ] Add topic recommendations
+### Phase 1 (Week 1) — Design + Data Model
+- Define search scopes and filters (topics/messages/users).
+- Identify admin dashboard datasets and required endpoints.
+- Add DB indexes and baseline perf checks.
+- Tests: API unit tests for search helpers; DB integration tests for indexed queries.
 
-**Database Changes:**
-```sql
-ALTER TABLE topics ADD COLUMN category VARCHAR(100);
-ALTER TABLE topics ADD COLUMN tags TEXT[]; -- Array of tags
-CREATE TABLE topic_favorites (
-  user_id INTEGER REFERENCES users(id),
-  topic_id INTEGER REFERENCES topics(id),
-  PRIMARY KEY (user_id, topic_id)
-);
-```
+### Phase 2 (Weeks 2–3) — Build Core Features
+- Implement topic + message search endpoints.
+- Add admin CRUD endpoints and moderation actions.
+- Build UI for search filters and admin views.
+- Tests: API integration tests, frontend unit tests, and E2E smoke for search/admin pages.
+
+### Phase 3 (Week 4) — Hardening + Release Prep
+- Add security guards (CSRF + input sanitization).
+- Draft OpenAPI docs for search + admin endpoints.
+- Run full test suite + E2E and update docs/release notes.
+- Tests: full suite + E2E on CI-like env.
 
 ---
 
-### 3. Admin Dashboard Enhancements ⏳
-**Priority:** Low-Medium  
-**Status:** Basic dashboard exists (live data wired)  
-**Estimated Effort:** Medium
+## Technical Debt & Improvements
 
-**Tasks:**
-- [ ] Connect admin dashboard to real data
-- [ ] Add user management (CRUD operations)
-- [ ] Add topic moderation tools
-- [ ] Implement content moderation
-- [ ] Add analytics and statistics
-- [ ] Create admin activity logs
-- [ ] Add system health monitoring
-
----
-
-## 🚀 Medium-Term Goals (v0.6 - v0.7)
-
-### 1. Testing & Quality Assurance
-- [x] Add unit tests (Vitest)
-- [x] Add integration tests (API + WebSocket)
-- [x] Add full browser E2E tests (Playwright)
-- [x] Set up test coverage thresholds
-- [x] CI workflow push (requires PAT with workflow scope)
-
-### 2. Performance Optimization
-- [ ] Add database indexing
-- [ ] Implement Redis caching
-- [ ] Add query optimization
-- [ ] Implement message batching
-- [ ] Add WebSocket compression
-- [ ] Optimize frontend bundle size
-- [ ] Add image optimization
-- [ ] Implement lazy loading
-
-### 3. Security Enhancements
-- [ ] Add CSRF protection
-- [ ] Implement input sanitization
-- [ ] Add XSS protection
-- [ ] Set up secrets management
-- [ ] Implement audit logging
-
-### 4. API Documentation
-- [ ] Add OpenAPI/Swagger documentation
-- [ ] Create API documentation site
-- [ ] Add endpoint examples
-- [ ] Document authentication flow
-- [ ] Add error code documentation
-
-### 5. Search Functionality
-- [ ] Implement Elasticsearch integration
-- [ ] Add advanced search filters
-- [ ] Implement search analytics
-- [ ] Add search result ranking
-
----
-
-## 🌟 Long-Term Vision (v0.8+)
-
-### 1. Advanced Collaboration Features
-- [ ] Video/audio calls integration
-- [ ] Collaborative whiteboard
-- [ ] Code editor with syntax highlighting
-- [ ] Screen sharing
-- [ ] Real-time document editing
-
-### 2. File Management
-- [ ] File versioning
-- [ ] File sharing with permissions
-- [ ] Cloud storage integration
-- [ ] File preview for multiple formats
-- [ ] File organization system
-
-### 3. Mobile Application
-- [ ] React Native mobile app
-- [ ] Push notifications
-- [ ] Mobile-optimized UI
-- [ ] Offline support
-
-### 4. Analytics & Insights
-- [ ] User analytics dashboard
-- [ ] Topic engagement metrics
-- [ ] Learning progress tracking
-- [ ] Study session analytics
-- [ ] Performance insights
-
-### 5. AI/ML Features
-- [ ] Topic recommendations
-- [ ] Smart search suggestions
-- [ ] Content moderation (AI-powered)
-- [ ] Study group matching
-- [ ] Learning path suggestions
-
-### 6. Production Deployment
-- [ ] Kubernetes orchestration
-- [ ] Load balancing
-- [ ] Database replication
-- [ ] Redis cluster setup
-- [ ] Monitoring (Prometheus + Grafana)
-- [ ] Logging (ELK stack)
-- [ ] CDN for static assets
-- [ ] Auto-scaling configuration
-
----
-
-## 📋 Technical Debt & Improvements
-
-### Immediate Fixes Needed
-1. **Error Monitoring** - Add error tracking (Sentry)
-2. **Database Indexing** - Add indexes for performance
+### Immediate
+1. Error monitoring (Sentry or equivalent)
+2. Database indexing review and optimization (aligned with Phase 1)
 
 ### Code Quality
-- [ ] Add ESLint rules enforcement
-- [ ] Add Prettier formatting
-- [ ] Add pre-commit hooks
-- [ ] Code review process
-- [ ] Documentation standards
+- ESLint rules enforcement
+- Prettier formatting
+- Pre-commit hooks
+- Documentation standards
 
 ### Infrastructure
-- [ ] Environment variable validation
-- [ ] Health check endpoints
-- [ ] Graceful shutdown handling
-- [ ] Logging standardization
-- [ ] Error handling consistency
+- Environment variable validation
+- Health check endpoints
+- Graceful shutdown handling
+- Logging standardization
 
 ---
 
-## 🎯 Recommended Development Order
-
-### Sprint 1 (v0.6 - Next 2-3 weeks)
-1. Advanced search and filtering
-2. Topic categories and organization
-3. Admin dashboard enhancements
-4. Testing setup (unit tests)
-
-### Sprint 2 (v0.6.1 - Following 2 weeks)
-1. Performance optimization
-2. Security enhancements
-3. API documentation
-4. CI/CD pipeline
-
-### Sprint 3 (v0.6 - Following month)
-1. Performance optimization
-2. Security enhancements
-3. API documentation
-4. CI/CD pipeline
-
----
-
-## 📝 Notes
-
-- All seed scripts are preserved in the repository for future use
-- Demo mode is fully functional and can be used for testing
-- Current architecture supports all planned features
-- Database schema can be extended as needed
-- Microservices architecture allows independent scaling
-
----
-
-## 🔗 Related Documentation
+## Related Documentation
 
 - `VERSION_v0.4.md` - Current version details
 - `DEVELOPMENT_JOURNAL.md` - Complete development history
@@ -271,6 +102,5 @@ CREATE TABLE topic_favorites (
 
 ---
 
-**Last Updated:** 2026-01-24  
-**Next Review:** After v0.6 planning
+**Next Review:** After short-term milestones are done
 
