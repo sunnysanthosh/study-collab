@@ -15,7 +15,7 @@
    - Purpose: Comprehensive context reference document
 
 2. `chore: Add .gitkeep files for logs and uploads directories`
-   - Files: backend/api/logs/.gitkeep, backend/api/uploads/.gitkeep
+   - Files: services/api/logs/.gitkeep, services/api/uploads/.gitkeep
    - Purpose: Preserve directory structure in git
 
 3. `docs: Add push instructions`
@@ -46,7 +46,7 @@
 ### Configuration Files
 - ✅ package.json (all services)
 - ✅ tsconfig.json (all services)
-- ✅ .gitignore (root and backend/api)
+- ✅ .gitignore (root and services/api)
 - ✅ docker-compose.yml
 - ✅ Dockerfiles (frontend, api, websocket)
 - ✅ Environment variable templates

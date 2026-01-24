@@ -165,8 +165,8 @@ After successfully pushing, verify:
 
 3. **Verify Files:**
    - PROJECT_STATUS.md should be in root
-   - backend/api/logs/.gitkeep should exist
-   - backend/api/uploads/.gitkeep should exist
+   - services/api/logs/.gitkeep should exist
+   - services/api/uploads/.gitkeep should exist
    - PUSH_INSTRUCTIONS.md should exist
    - push-to-github.sh should exist
    - ARTIFACTS_VERIFICATION.md should exist

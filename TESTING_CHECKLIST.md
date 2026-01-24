@@ -30,20 +30,20 @@ npm run dev
 
 Terminal 2 - API:
 ```bash
-cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab/backend/api
+cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab/services/api
 npm run dev
 ```
 
 Terminal 3 - WebSocket:
 ```bash
-cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab/backend/websocket
+cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab/services/websocket
 npm run dev
 ```
 
 ### Automated Tests (Optional)
 ```bash
 # Backend unit/integration
-cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab/backend/api
+cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab/services/api
 npm test
 
 # Frontend unit tests
@@ -51,7 +51,7 @@ cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab
 npm test
 
 # WebSocket integration tests
-cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab/backend/websocket
+cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab/services/websocket
 npm test
 
 # Browser E2E (Playwright, services must be running)

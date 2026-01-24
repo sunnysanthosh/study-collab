@@ -281,9 +281,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Real-time messaging with persistence
 
 - **Demo Mode**
-  - Enhanced seed script (`backend/api/src/db/seed.ts`) - **Preserved**
+  - Enhanced seed script (`services/api/src/db/seed.ts`) - **Preserved**
   - Auto-seeding on startup (DEMO_MODE=true)
-  - Reset script (`backend/api/src/db/reset-demo.ts`) - **Preserved**
+  - Reset script (`services/api/src/db/reset-demo.ts`) - **Preserved**
   - Demo startup script (`scripts/start-demo.sh`) - **Preserved**
   - 5 test users, 6 demo topics, sample messages
   - Comprehensive demo data
@@ -329,8 +329,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Creator-only topic updates/deletes
 
 ### Seed Scripts (Preserved for Future Use)
-- `backend/api/src/db/seed.ts` - Comprehensive seeding script
-- `backend/api/src/db/reset-demo.ts` - Demo data reset script
+- `services/api/src/db/seed.ts` - Comprehensive seeding script
+- `services/api/src/db/reset-demo.ts` - Demo data reset script
 - `scripts/start-demo.sh` - Demo mode startup script
 - All scripts documented in `DEMO_MODE.md`
 

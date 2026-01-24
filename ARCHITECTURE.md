@@ -95,7 +95,7 @@ frontend/
 └── package.json
 ```
 
-### Backend API Module (`/backend/api`)
+### Backend API Module (`/services/api`)
 ```
 backend/
 ├── api/
@@ -112,7 +112,7 @@ backend/
 │   └── package.json
 ```
 
-### WebSocket Service (`/backend/websocket`)
+### WebSocket Service (`/services/websocket`)
 ```
 backend/
 ├── websocket/
@@ -240,7 +240,7 @@ services:
       - websocket
 
   api:
-    build: ./backend/api
+    build: ./services/api
     ports:
       - "3001:3001"
     environment:
@@ -252,7 +252,7 @@ services:
       - redis
 
   websocket:
-    build: ./backend/websocket
+    build: ./services/websocket
     ports:
       - "3002:3002"
     environment:

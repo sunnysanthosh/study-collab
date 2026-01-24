@@ -3,15 +3,15 @@ version: '3.8'
 services:
   frontend:
     build:
-      context: .
-      dockerfile: Dockerfile.frontend
+      context: ./apps/web
+      dockerfile: Dockerfile
     ports:
       - "3000:3000"
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:3001
       - NEXT_PUBLIC_SOCKET_URL=http://localhost:3002
     volumes:
-      - .:/app
+      - ./apps/web:/app
       - /app/node_modules
       - /app/.next
     depends_on:
@@ -20,7 +20,7 @@ services:
 
   api:
     build:
-      context: ./backend/api
+      context: ./services/api
       dockerfile: Dockerfile
     ports:
       - "3001:3001"
@@ -31,14 +31,14 @@ services:
       - JWT_SECRET=your-secret-key-change-in-production
       - FRONTEND_URL=http://localhost:3000
     volumes:
-      - ./backend/api:/app
+      - ./services/api:/app
       - /app/node_modules
     depends_on:
       - db
 
   websocket:
     build:
-      context: ./backend/websocket
+      context: ./services/websocket
       dockerfile: Dockerfile
     ports:
       - "3002:3002"
@@ -47,7 +47,7 @@ services:
       - PORT=3002
       - FRONTEND_URL=http://localhost:3000
     volumes:
-      - ./backend/websocket:/app
+      - ./services/websocket:/app
       - /app/node_modules
     depends_on:
       - db

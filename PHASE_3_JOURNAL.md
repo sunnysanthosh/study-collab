@@ -56,7 +56,7 @@ Phase 3 focused on replacing all mock/test systems with real database integratio
 
 #### New Modules
 
-**1. Database Connection (`backend/api/src/db/connection.ts`)**
+**1. Database Connection (`services/api/src/db/connection.ts`)**
 - **Purpose:** PostgreSQL connection pool management
 - **Features:**
   - Connection pooling (max 20 connections)
@@ -67,7 +67,7 @@ Phase 3 focused on replacing all mock/test systems with real database integratio
 - **Environment Variables:**
   - `DATABASE_URL` - PostgreSQL connection string
 
-**2. Database Schema (`backend/api/src/db/schema.sql`)**
+**2. Database Schema (`services/api/src/db/schema.sql`)**
 - **Purpose:** Database structure definition
 - **Tables Created:**
   - `users` - User accounts with authentication
@@ -81,7 +81,7 @@ Phase 3 focused on replacing all mock/test systems with real database integratio
   - Automatic timestamp updates
   - Cascade deletes for data integrity
 
-**3. Migration Script (`backend/api/src/db/migrate.ts`)**
+**3. Migration Script (`services/api/src/db/migrate.ts`)**
 - **Purpose:** Automated database schema deployment
 - **Usage:** `npm run migrate`
 - **Features:**
@@ -89,7 +89,7 @@ Phase 3 focused on replacing all mock/test systems with real database integratio
   - Executes schema creation
   - Error handling and logging
 
-**4. JWT Utilities (`backend/api/src/utils/jwt.ts`)**
+**4. JWT Utilities (`services/api/src/utils/jwt.ts`)**
 - **Purpose:** JWT token management
 - **Functions:**
   - `generateAccessToken()` - Creates access token (15min expiry)
@@ -101,7 +101,7 @@ Phase 3 focused on replacing all mock/test systems with real database integratio
   - Configurable expiration times
   - Token payload includes userId, email, role
 
-**5. Password Utilities (`backend/api/src/utils/password.ts`)**
+**5. Password Utilities (`services/api/src/utils/password.ts`)**
 - **Purpose:** Password security
 - **Functions:**
   - `hashPassword()` - Bcrypt hashing (12 salt rounds)
@@ -113,7 +113,7 @@ Phase 3 focused on replacing all mock/test systems with real database integratio
   - At least one lowercase letter
   - At least one number
 
-**6. User Model (`backend/api/src/models/User.ts`)**
+**6. User Model (`services/api/src/models/User.ts`)**
 - **Purpose:** User data operations
 - **Functions:**
   - `createUser()` - Register new user with password hashing
@@ -126,7 +126,7 @@ Phase 3 focused on replacing all mock/test systems with real database integratio
   - Email uniqueness enforced
   - Password hashing on creation/update
 
-**7. Topic Model (`backend/api/src/models/Topic.ts`)**
+**7. Topic Model (`services/api/src/models/Topic.ts`)**
 - **Purpose:** Topic/room data operations
 - **Functions:**
   - `createTopic()` - Create new study topic
@@ -139,7 +139,7 @@ Phase 3 focused on replacing all mock/test systems with real database integratio
   - Filtering by subject and difficulty
   - Tag support (array field)
 
-**8. Message Model (`backend/api/src/models/Message.ts`)**
+**8. Message Model (`services/api/src/models/Message.ts`)**
 - **Purpose:** Message data operations
 - **Functions:**
   - `createMessage()` - Save new message
@@ -151,7 +151,7 @@ Phase 3 focused on replacing all mock/test systems with real database integratio
   - Pagination support (limit/offset)
   - Ordered by creation time
 
-**9. TopicMember Model (`backend/api/src/models/TopicMember.ts`)**
+**9. TopicMember Model (`services/api/src/models/TopicMember.ts`)**
 - **Purpose:** Topic membership management
 - **Functions:**
   - `addMemberToTopic()` - Join topic (handles duplicates)
@@ -164,7 +164,7 @@ Phase 3 focused on replacing all mock/test systems with real database integratio
 
 #### Updated Modules
 
-**1. Auth Controller (`backend/api/src/controllers/authController.ts`)**
+**1. Auth Controller (`services/api/src/controllers/authController.ts`)**
 - **Before:** Mock responses with hardcoded tokens
 - **After:** Real authentication with database
 - **Changes:**
@@ -178,7 +178,7 @@ Phase 3 focused on replacing all mock/test systems with real database integratio
   - Duplicate email checking
   - Error handling with appropriate status codes
 
-**2. Topic Controller (`backend/api/src/controllers/topicController.ts`)**
+**2. Topic Controller (`services/api/src/controllers/topicController.ts`)**
 - **Before:** Mock data responses
 - **After:** Database operations
 - **Changes:**
@@ -193,7 +193,7 @@ Phase 3 focused on replacing all mock/test systems with real database integratio
   - Creator-only update/delete
   - Membership verification for operations
 
-**3. User Controller (`backend/api/src/controllers/userController.ts`)**
+**3. User Controller (`services/api/src/controllers/userController.ts`)**
 - **Before:** Mock user data
 - **After:** Database operations
 - **Changes:**
@@ -204,7 +204,7 @@ Phase 3 focused on replacing all mock/test systems with real database integratio
   - Email uniqueness check on update
   - Password hashing on password update
 
-**4. Message Controller (`backend/api/src/controllers/messageController.ts`)**
+**4. Message Controller (`services/api/src/controllers/messageController.ts`)**
 - **New Module:** Created for message API endpoints
 - **Functions:**
   - `getMessages()` - Load message history
@@ -214,7 +214,7 @@ Phase 3 focused on replacing all mock/test systems with real database integratio
   - Membership required to send messages
   - Users can only delete own messages
 
-**5. Auth Middleware (`backend/api/src/middleware/auth.ts`)**
+**5. Auth Middleware (`services/api/src/middleware/auth.ts`)**
 - **Before:** Mock authentication
 - **After:** JWT token verification
 - **Changes:**
@@ -225,7 +225,7 @@ Phase 3 focused on replacing all mock/test systems with real database integratio
   - Token validation on every protected route
   - User info available in req.user
 
-**6. Server (`backend/api/src/server.ts`)**
+**6. Server (`services/api/src/server.ts`)**
 - **Changes:**
   - Database connection initialization
   - Health check includes database status
@@ -237,26 +237,26 @@ Phase 3 focused on replacing all mock/test systems with real database integratio
 
 #### New Modules
 
-**1. Database Connection (`backend/websocket/src/db/connection.ts`)**
+**1. Database Connection (`services/websocket/src/db/connection.ts`)**
 - **Purpose:** Separate database connection for WebSocket service
 - **Features:** Same as API service connection pool
 - **Note:** Independent connection pool for WebSocket operations
 
-**2. JWT Utilities (`backend/websocket/src/utils/jwt.ts`)**
+**2. JWT Utilities (`services/websocket/src/utils/jwt.ts`)**
 - **Purpose:** Token verification for WebSocket connections
 - **Function:** `verifyToken()` - Validates JWT from handshake
 
-**3. Message Model (`backend/websocket/src/models/Message.ts`)**
+**3. Message Model (`services/websocket/src/models/Message.ts`)**
 - **Purpose:** Message persistence from WebSocket
 - **Functions:**
   - `createMessage()` - Save message to database
   - `getMessagesByTopic()` - Load message history
 
-**4. User Model (`backend/websocket/src/models/User.ts`)**
+**4. User Model (`services/websocket/src/models/User.ts`)**
 - **Purpose:** User info retrieval for WebSocket
 - **Function:** `getUserById()` - Get user details for display
 
-**5. TopicMember Model (`backend/websocket/src/models/TopicMember.ts`)**
+**5. TopicMember Model (`services/websocket/src/models/TopicMember.ts`)**
 - **Purpose:** Membership verification
 - **Functions:**
   - `addMemberToTopic()` - Auto-join on room entry
@@ -264,7 +264,7 @@ Phase 3 focused on replacing all mock/test systems with real database integratio
 
 #### Updated Modules
 
-**1. WebSocket Server (`backend/websocket/src/server.ts`)**
+**1. WebSocket Server (`services/websocket/src/server.ts`)**
 - **Before:** In-memory message storage, no authentication
 - **After:** Database persistence, JWT authentication
 - **Major Changes:**
@@ -595,7 +595,7 @@ NODE_ENV=development
 4. **API endpoints changed** - All use real database
 
 ### Migration Steps
-1. Run database migration: `npm run migrate` (in backend/api)
+1. Run database migration: `npm run migrate` (in services/api)
 2. Set environment variables
 3. Start database (Docker or local PostgreSQL)
 4. Start services in order: Database → API → WebSocket → Frontend

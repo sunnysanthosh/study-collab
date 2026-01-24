@@ -123,7 +123,7 @@
 - `@types/multer` - TypeScript types for multer
 
 ### Database Migrations
-- Migration script: `backend/api/src/db/migrate-v0.5.ts`
+- Migration script: `services/api/src/db/migrate-v0.5.ts`
 - Run with: `npx tsx src/db/migrate-v0.5.ts`
 
 ### API Endpoints Added
@@ -155,8 +155,8 @@
 - None - All changes are additive
 
 ### Migration Steps
-1. Run database migration: `npx tsx backend/api/src/db/migrate-v0.5.ts`
-2. Install new dependencies: `cd backend/api && npm install`
+1. Run database migration: `npx tsx services/api/src/db/migrate-v0.5.ts`
+2. Install new dependencies: `cd services/api && npm install`
 3. Restart services: `./scripts/stop-services.sh && ./scripts/start-demo.sh`
 
 ### New Environment Variables

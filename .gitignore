@@ -7,7 +7,7 @@ node_modules/
 coverage/
 .nyc_output
 test-results/
-tests/e2e/.auth/
+apps/web/tests/.auth/
 
 # Production
 build/
@@ -39,14 +39,14 @@ yarn-error.log*
 next-env.d.ts
 
 # Logs (keep structure, ignore content)
-backend/api/logs/*.log
-backend/api/logs/*.log.gz
-!backend/api/logs/.gitkeep
-backend/websocket/logs/
+services/api/logs/*.log
+services/api/logs/*.log.gz
+!services/api/logs/.gitkeep
+services/websocket/logs/
 
 # Uploads
-backend/api/uploads/
-!backend/api/uploads/.gitkeep
+services/api/uploads/
+!services/api/uploads/.gitkeep
 
 # Process files
 *.pid

@@ -156,25 +156,27 @@ install_dependencies() {
     cd "$PROJECT_ROOT"
     
     # Frontend
-    if [ ! -d "node_modules" ]; then
+    if [ ! -f "apps/web/node_modules/next/package.json" ]; then
         log "${YELLOW}Installing frontend dependencies...${NC}"
+        cd apps/web
         npm install
+        cd "$PROJECT_ROOT"
     fi
     log "${GREEN}✓ Frontend dependencies${NC}"
     
     # Backend API
-    if [ ! -d "backend/api/node_modules" ]; then
+    if [ ! -f "services/api/node_modules/express/package.json" ]; then
         log "${YELLOW}Installing API dependencies...${NC}"
-        cd backend/api
+        cd services/api
         npm install
         cd "$PROJECT_ROOT"
     fi
     log "${GREEN}✓ API dependencies${NC}"
     
     # WebSocket
-    if [ ! -d "backend/websocket/node_modules" ]; then
+    if [ ! -f "services/websocket/node_modules/socket.io/package.json" ]; then
         log "${YELLOW}Installing WebSocket dependencies...${NC}"
-        cd backend/websocket
+        cd services/websocket
         npm install
         cd "$PROJECT_ROOT"
     fi
@@ -235,13 +237,13 @@ main() {
     # Start services in dependency order
     # 1. Database (already done)
     # 2. API (depends on database)
-    start_service "API" "backend/api" "npm run dev" 3001 "http://localhost:3001/health"
+    start_service "API" "services/api" "npm run dev" 3001 "http://localhost:3001/health"
     
     # 3. WebSocket (depends on database)
-    start_service "WebSocket" "backend/websocket" "npm run dev" 3002 ""
+    start_service "WebSocket" "services/websocket" "npm run dev" 3002 ""
     
     # 4. Frontend (depends on API and WebSocket)
-    start_service "Frontend" "." "npm run dev" 3000 "http://localhost:3000"
+    start_service "Frontend" "apps/web" "npm run dev" 3000 "http://localhost:3000"
     
     # Final status
     log "${GREEN}========================================${NC}"

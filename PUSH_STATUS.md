@@ -23,8 +23,8 @@
 - ARTIFACTS_VERIFICATION.md
 - push-to-github.sh
 - push-with-token.sh
-- backend/api/logs/.gitkeep
-- backend/api/uploads/.gitkeep
+- services/api/logs/.gitkeep
+- services/api/uploads/.gitkeep
 
 ---
 

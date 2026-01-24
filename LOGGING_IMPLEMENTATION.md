@@ -27,7 +27,7 @@ Comprehensive error logging and monitoring system has been implemented to streng
 
 #### Log Files Structure
 ```
-backend/api/logs/
+services/api/logs/
 ├── error-YYYY-MM-DD.log          # Error logs (14 days)
 ├── combined-YYYY-MM-DD.log       # All logs (30 days)
 ├── http-YYYY-MM-DD.log           # HTTP logs (7 days)
@@ -241,7 +241,7 @@ try {
 ### Manual Testing
 1. Start services: `./scripts/start-demo.sh`
 2. Make API requests
-3. Check logs in `backend/api/logs/`
+3. Check logs in `services/api/logs/`
 4. Verify error logging on failures
 5. Test error statistics endpoint
 

@@ -56,21 +56,23 @@ echo ""
 # Install dependencies if needed
 echo "📦 Checking dependencies..."
 
-if [ ! -d "node_modules" ]; then
+if [ ! -f "apps/web/node_modules/next/package.json" ]; then
     echo "Installing frontend dependencies..."
-    npm install
-fi
-
-if [ ! -d "backend/api/node_modules" ]; then
-    echo "Installing API dependencies..."
-    cd backend/api
+    cd apps/web
     npm install
     cd ../..
 fi
 
-if [ ! -d "backend/websocket/node_modules" ]; then
+if [ ! -f "services/api/node_modules/express/package.json" ]; then
+    echo "Installing API dependencies..."
+    cd services/api
+    npm install
+    cd ../..
+fi
+
+if [ ! -f "services/websocket/node_modules/socket.io/package.json" ]; then
     echo "Installing WebSocket dependencies..."
-    cd backend/websocket
+    cd services/websocket
     npm install
     cd ../..
 fi
@@ -105,14 +107,15 @@ echo "You'll need to open 3 terminal windows:"
 echo ""
 echo "Terminal 1 - Frontend:"
 echo "  cd $(pwd)"
+echo "  cd apps/web"
 echo "  npm run dev"
 echo ""
 echo "Terminal 2 - API:"
-echo "  cd $(pwd)/backend/api"
+echo "  cd $(pwd)/services/api"
 echo "  npm run dev"
 echo ""
 echo "Terminal 3 - WebSocket:"
-echo "  cd $(pwd)/backend/websocket"
+echo "  cd $(pwd)/services/websocket"
 echo "  npm run dev"
 echo ""
 
@@ -125,13 +128,15 @@ if [ "$start_now" = "y" ] || [ "$start_now" = "Y" ]; then
     
     # Start frontend in background
     echo "Starting Frontend on http://localhost:3000..."
+    cd apps/web
     npm run dev > /tmp/studycollab-frontend.log 2>&1 &
     FRONTEND_PID=$!
     echo "Frontend PID: $FRONTEND_PID"
+    cd ../..
     
     # Start API in background
     echo "Starting API on http://localhost:3001..."
-    cd backend/api
+    cd services/api
     npm run dev > /tmp/studycollab-api.log 2>&1 &
     API_PID=$!
     echo "API PID: $API_PID"
@@ -139,7 +144,7 @@ if [ "$start_now" = "y" ] || [ "$start_now" = "Y" ]; then
     
     # Start WebSocket in background
     echo "Starting WebSocket on http://localhost:3002..."
-    cd backend/websocket
+    cd services/websocket
     npm run dev > /tmp/studycollab-websocket.log 2>&1 &
     WEBSOCKET_PID=$!
     echo "WebSocket PID: $WEBSOCKET_PID"

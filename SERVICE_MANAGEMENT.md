@@ -73,7 +73,7 @@ The startup script performs these checks:
 
 **API Service:**
 ```bash
-cd backend/api
+cd services/api
 npm run dev
 ```
 - Starts on port 3001
@@ -82,7 +82,7 @@ npm run dev
 
 **WebSocket Service:**
 ```bash
-cd backend/websocket
+cd services/websocket
 npm run dev
 ```
 - Starts on port 3002
@@ -185,13 +185,13 @@ docker run -d \
 
 **API:**
 ```bash
-cd backend/api
+cd services/api
 npm run dev
 ```
 
 **WebSocket:**
 ```bash
-cd backend/websocket
+cd services/websocket
 npm run dev
 ```
 
@@ -334,14 +334,14 @@ lsof -i :3002
 - `NEXT_PUBLIC_API_URL` - API service URL
 - `NEXT_PUBLIC_SOCKET_URL` - WebSocket service URL
 
-**API (`backend/api/.env`):**
+**API (`services/api/.env`):**
 - `NODE_ENV` - Environment (development/production)
 - `PORT` - API port (default: 3001)
 - `DATABASE_URL` - PostgreSQL connection string
 - `JWT_SECRET` - JWT signing secret
 - `FRONTEND_URL` - Frontend URL for CORS
 
-**WebSocket (`backend/websocket/.env`):**
+**WebSocket (`services/websocket/.env`):**
 - `NODE_ENV` - Environment
 - `PORT` - WebSocket port (default: 3002)
 - `FRONTEND_URL` - Frontend URL for CORS

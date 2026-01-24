@@ -12,9 +12,9 @@ curl -s -X POST http://localhost:3001/api/auth/login \
   -d '{"email":"invalid","password":"invalid"}' > /dev/null && echo "✅ Error logging tested"
 
 # Check log files
-if [ -d "backend/api/logs" ]; then
+if [ -d "services/api/logs" ]; then
   echo "✅ Logs directory exists"
-  ls -lh backend/api/logs/ 2>/dev/null | head -5
+  ls -lh services/api/logs/ 2>/dev/null | head -5
 else
   echo "⚠️  Logs directory not found"
 fi

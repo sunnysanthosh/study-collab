@@ -30,7 +30,7 @@
 
 3. **Run Migration:**
    ```bash
-   cd backend/api
+   cd services/api
    npm run migrate
    ```
 
@@ -62,7 +62,7 @@ If you have PostgreSQL installed locally:
 
 3. **Run Migration:**
    ```bash
-   cd backend/api
+   cd services/api
    npm run migrate
    ```
 
@@ -115,7 +115,7 @@ localStorage.getItem('studycollab_user')
 
 ```bash
 # Backend unit/integration
-cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab/backend/api
+cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab/services/api
 npm test
 
 # Frontend unit tests
@@ -123,7 +123,7 @@ cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab
 npm test
 
 # WebSocket integration tests
-cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab/backend/websocket
+cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab/services/websocket
 npm test
 
 # API-focused E2E script (services must be running)
@@ -136,7 +136,7 @@ npx playwright install
 ./scripts/run-e2e.sh
 
 # Optional: disable rate limiting for repeated E2E logins
-# DISABLE_RATE_LIMIT=true npm run dev  (run in backend/api)
+# DISABLE_RATE_LIMIT=true npm run dev  (run in services/api)
 npm run test:e2e
 ```
 

@@ -60,7 +60,22 @@ if ! port_open 5432; then
   fi
 fi
 
-cd "$PROJECT_ROOT/backend/api"
+if [ ! -f "$PROJECT_ROOT/apps/web/node_modules/next/package.json" ]; then
+  cd "$PROJECT_ROOT/apps/web"
+  npm install
+fi
+
+if [ ! -f "$PROJECT_ROOT/services/api/node_modules/express/package.json" ]; then
+  cd "$PROJECT_ROOT/services/api"
+  npm install
+fi
+
+if [ ! -f "$PROJECT_ROOT/services/websocket/node_modules/socket.io/package.json" ]; then
+  cd "$PROJECT_ROOT/services/websocket"
+  npm install
+fi
+
+cd "$PROJECT_ROOT/services/api"
 DATABASE_URL="$DATABASE_URL" npm run migrate
 DATABASE_URL="$DATABASE_URL" npm run seed
 
@@ -68,12 +83,12 @@ DISABLE_RATE_LIMIT=true DATABASE_URL="$DATABASE_URL" JWT_SECRET="$JWT_SECRET" FR
   npm run dev > "$LOG_DIR/api.log" 2>&1 &
 API_PID=$!
 
-cd "$PROJECT_ROOT/backend/websocket"
+cd "$PROJECT_ROOT/services/websocket"
 DATABASE_URL="$DATABASE_URL" JWT_SECRET="$JWT_SECRET" FRONTEND_URL="$FRONTEND_URL" \
   npm run dev > "$LOG_DIR/websocket.log" 2>&1 &
 WS_PID=$!
 
-cd "$PROJECT_ROOT"
+cd "$PROJECT_ROOT/apps/web"
 NEXT_PUBLIC_API_URL="$API_URL" NEXT_PUBLIC_SOCKET_URL="$SOCKET_URL" \
   npm run dev > "$LOG_DIR/frontend.log" 2>&1 &
 FE_PID=$!

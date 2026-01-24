@@ -1,36 +1,17 @@
 {
-  "name": "study-collab",
-  "version": "0.1.0",
+  "name": "study-collab-root",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
-  },
-  "dependencies": {
-    "next": "^16.1.4",
-    "react": "19.2.0",
-    "react-dom": "19.2.0",
-    "socket.io-client": "^4.8.1"
-  },
-  "devDependencies": {
-    "@playwright/test": "^1.58.0",
-    "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "^16.3.2",
-    "@testing-library/user-event": "^14.6.1",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.0.3",
-    "jsdom": "^27.4.0",
-    "typescript": "^5",
-    "vite-tsconfig-paths": "^6.0.5",
-    "vitest": "^4.0.18"
+    "dev:web": "npm --prefix apps/web run dev",
+    "dev:api": "npm --prefix services/api run dev",
+    "dev:ws": "npm --prefix services/websocket run dev",
+    "build:web": "npm --prefix apps/web run build",
+    "start:web": "npm --prefix apps/web run start",
+    "test:web": "npm --prefix apps/web test",
+    "test:api": "npm --prefix services/api test",
+    "test:ws": "npm --prefix services/websocket test",
+    "test:e2e": "npm --prefix apps/web run test:e2e",
+    "test:e2e:ui": "npm --prefix apps/web run test:e2e:ui",
+    "lint:web": "npm --prefix apps/web run lint"
   }
 }

@@ -48,7 +48,7 @@ test('presence and notification update', async ({ page, browser }) => {
   }
 
   const adminContext = await browser.newContext({
-    storageState: 'tests/e2e/.auth/admin.json',
+    storageState: 'tests/.auth/admin.json',
   });
   const adminPage = await adminContext.newPage();
   await adminPage.goto(`${baseURL}${roomHref}`);

@@ -26,7 +26,7 @@ cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab
 ### 2. Run Database Migration
 
 ```bash
-cd backend/api
+cd services/api
 npm run migrate
 ```
 
@@ -48,7 +48,7 @@ docker exec studycollab-db pg_isready -U studycollab
 ### 4. Optional Automated Checks
 ```bash
 # Backend unit/integration
-cd backend/api
+cd services/api
 npm test
 
 # Frontend unit tests
@@ -56,7 +56,7 @@ cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab
 npm test
 
 # WebSocket integration tests
-cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab/backend/websocket
+cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab/services/websocket
 npm test
 
 # Browser E2E (Playwright, services must be running)
@@ -65,7 +65,7 @@ npx playwright install
 # One-command runner (starts services, seeds, runs Playwright, stops)
 ./scripts/run-e2e.sh
 # Optional: disable rate limiting for repeated E2E logins
-# DISABLE_RATE_LIMIT=true npm run dev  (run in backend/api)
+# DISABLE_RATE_LIMIT=true npm run dev  (run in services/api)
 npm run test:e2e
 ```
 

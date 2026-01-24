@@ -16,26 +16,26 @@
 - Upgraded Next.js to address critical security advisory.
 
 ### Key files updated
-- `backend/api/src/db/schema.sql`
-- `backend/api/src/db/migrate-v0.5.ts`
-- `backend/api/src/server.ts`
-- `backend/api/src/controllers/authController.ts`
-- `backend/api/src/controllers/messageController.ts`
-- `backend/api/src/models/TokenBlacklist.ts`
-- `backend/api/src/models/Notification.ts`
-- `backend/api/src/middleware/auth.ts`
-- `backend/api/src/middleware/requireAdmin.ts`
-- `backend/websocket/src/server.ts`
-- `backend/websocket/src/models/Message.ts`
+- `services/api/src/db/schema.sql`
+- `services/api/src/db/migrate-v0.5.ts`
+- `services/api/src/server.ts`
+- `services/api/src/controllers/authController.ts`
+- `services/api/src/controllers/messageController.ts`
+- `services/api/src/models/TokenBlacklist.ts`
+- `services/api/src/models/Notification.ts`
+- `services/api/src/middleware/auth.ts`
+- `services/api/src/middleware/requireAdmin.ts`
+- `services/websocket/src/server.ts`
+- `services/websocket/src/models/Message.ts`
 - `src/components/layout/NotificationCenter.tsx`
 - `src/components/collab/ChatInterface.tsx`
 - `src/hooks/useSocket.ts`
 - `src/lib/api.ts`
-- `backend/api/src/controllers/adminController.ts`
-- `backend/api/src/routes/admin.ts`
-- `backend/api/src/models/TopicFavorite.ts`
-- `backend/api/tests/*`
-- `backend/api/vitest.config.ts`
+- `services/api/src/controllers/adminController.ts`
+- `services/api/src/routes/admin.ts`
+- `services/api/src/models/TopicFavorite.ts`
+- `services/api/tests/*`
+- `services/api/vitest.config.ts`
 - `src/components/collab/TopicCard.test.tsx`
 - `src/app/admin/AdminDashboard.test.tsx`
 - `.github/workflows/ci.yml`

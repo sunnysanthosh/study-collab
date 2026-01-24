@@ -92,7 +92,7 @@ Comprehensive end-to-end testing was performed on StudyCollab v0.5.3, covering n
 
 ### 3.3 File Storage Verification
 - **Status:** ✅ VERIFIED
-- **Location:** `backend/api/uploads/`
+- **Location:** `services/api/uploads/`
 - **Structure:**
   - Files organized by type (general, avatar, etc.)
   - Unique filenames generated (timestamp-random-originalname)

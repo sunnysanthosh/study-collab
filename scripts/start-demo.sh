@@ -37,7 +37,7 @@ fi
 
 # Run migration
 echo -e "${BLUE}Running database migration...${NC}"
-cd "$PROJECT_DIR/backend/api"
+cd "$PROJECT_DIR/services/api"
 npm run migrate > /dev/null 2>&1 || echo -e "${YELLOW}Migration may have already run${NC}"
 
 # Seed demo data
@@ -48,19 +48,19 @@ npm run seed:demo
 echo -e "${BLUE}Starting services in demo mode...${NC}"
 
 # Start API with demo mode
-cd "$PROJECT_DIR/backend/api"
+cd "$PROJECT_DIR/services/api"
 DEMO_MODE=true npm run dev > /tmp/studycollab/API.log 2>&1 &
 API_PID=$!
 echo "API started with PID: $API_PID"
 
 # Start WebSocket
-cd "$PROJECT_DIR/backend/websocket"
+cd "$PROJECT_DIR/services/websocket"
 DEMO_MODE=true npm run dev > /tmp/studycollab/WebSocket.log 2>&1 &
 WS_PID=$!
 echo "WebSocket started with PID: $WS_PID"
 
 # Start Frontend
-cd "$PROJECT_DIR"
+cd "$PROJECT_DIR/apps/web"
 npm run dev > /tmp/studycollab/Frontend.log 2>&1 &
 FRONTEND_PID=$!
 echo "Frontend started with PID: $FRONTEND_PID"
@@ -116,7 +116,7 @@ echo -e "  ${GREEN}✅ 6 demo topics created${NC}"
 echo -e "  ${GREEN}✅ Sample messages added${NC}"
 echo ""
 echo -e "${YELLOW}To reset demo data:${NC}"
-echo -e "  cd backend/api && npm run reset:demo && npm run seed:demo"
+echo -e "  cd services/api && npm run reset:demo && npm run seed:demo"
 echo ""
 echo -e "${YELLOW}To stop services:${NC}"
 echo -e "  ./scripts/stop-services.sh"

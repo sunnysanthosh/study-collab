@@ -22,13 +22,15 @@ A real-time study collaboration platform built with Next.js. Collaborate with yo
 First, install dependencies:
 
 ```bash
-npm install
+cd apps/web && npm install
+cd ../../services/api && npm install
+cd ../websocket && npm install
 ```
 
 Then, run the development server:
 
 ```bash
-npm run dev
+./scripts/start-services.sh
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
@@ -46,16 +48,13 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ```
 study-collab/
-├── src/
-│   ├── app/              # Next.js app router pages
-│   │   ├── admin/        # Admin pages
-│   │   ├── api/          # API routes
-│   │   ├── topics/       # Topic pages
-│   │   └── ...
-│   └── components/       # React components
-│       ├── collab/       # Collaboration components
-│       └── layout/       # Layout components
-└── public/               # Static assets
+├── apps/
+│   └── web/              # Next.js frontend
+│       ├── src/
+│       └── public/
+└── services/
+    ├── api/              # Express API
+    └── websocket/        # Socket.IO service
 ```
 
 ## Services
@@ -72,7 +71,7 @@ study-collab/
 - `./scripts/stop-services.sh` - Stop all services
 - `./scripts/status.sh` - Service status
 - `./test-script.sh` - Automated E2E tests
-- `npm test` - Run frontend unit tests
+- `npm --prefix apps/web test` - Run frontend unit tests
 
 ## Learn More
 

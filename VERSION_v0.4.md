@@ -100,7 +100,7 @@
 
 ### Seed Scripts (Preserved for Future Use)
 
-**Location:** `backend/api/src/db/`
+**Location:** `services/api/src/db/`
 
 1. **seed.ts** - Comprehensive seeding script
    - Creates 5 test users
@@ -129,7 +129,7 @@
 ./scripts/start-demo.sh
 
 # Or manually seed
-cd backend/api
+cd services/api
 npm run seed:demo
 
 # Reset demo data
@@ -219,8 +219,8 @@ npm run reset-and-seed
 
 All seed scripts are **preserved** in the repository:
 
-✅ `backend/api/src/db/seed.ts` - Main seed script  
-✅ `backend/api/src/db/reset-demo.ts` - Reset script  
+✅ `services/api/src/db/seed.ts` - Main seed script  
+✅ `services/api/src/db/reset-demo.ts` - Reset script  
 ✅ `scripts/start-demo.sh` - Demo startup script  
 ✅ `DEMO_MODE.md` - Demo mode documentation  
 

@@ -29,13 +29,13 @@ This script will:
 
 2. **Seed demo data:**
    ```bash
-   cd backend/api
+   cd services/api
    npm run seed:demo
    ```
 
 3. **Start API with demo mode:**
    ```bash
-   cd backend/api
+   cd services/api
    DEMO_MODE=true npm run dev
    ```
 
@@ -77,19 +77,19 @@ When `DEMO_MODE=true` is set, the API service will:
 
 ### Seed Demo Data
 ```bash
-cd backend/api
+cd services/api
 npm run seed:demo
 ```
 
 ### Reset Demo Data
 ```bash
-cd backend/api
+cd services/api
 npm run reset:demo
 ```
 
 ### Reset and Re-seed
 ```bash
-cd backend/api
+cd services/api
 npm run reset-and-seed
 ```
 
@@ -165,7 +165,7 @@ NODE_ENV=demo
 
 ### Complete Reset
 ```bash
-cd backend/api
+cd services/api
 npm run reset:demo
 npm run seed:demo
 ```
@@ -201,7 +201,7 @@ npm run seed:demo
 ## 📝 Seed Script Details
 
 ### Location
-`backend/api/src/db/seed.ts`
+`services/api/src/db/seed.ts`
 
 ### What It Does
 1. Creates test users with hashed passwords
@@ -247,7 +247,7 @@ DEMO_MODE=false npm run dev
 ```
 
 ### Custom Seed Data
-Edit `backend/api/src/db/seed.ts`:
+Edit `services/api/src/db/seed.ts`:
 - Modify `testUsers` array
 - Modify `demoTopics` array
 - Modify `demoMessages` array

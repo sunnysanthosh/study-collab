@@ -163,12 +163,12 @@ StudyCollab is a real-time study collaboration platform that enables students to
    - Real-time message persistence
 
 **New Modules Created**:
-- `backend/api/src/db/` - Database connection and schema
-- `backend/api/src/utils/jwt.ts` - JWT utilities
-- `backend/api/src/utils/password.ts` - Password hashing
-- `backend/api/src/models/` - Database models (User, Topic, Message, TopicMember)
-- `backend/websocket/src/db/` - WebSocket database connection
-- `backend/websocket/src/models/` - WebSocket database models
+- `services/api/src/db/` - Database connection and schema
+- `services/api/src/utils/jwt.ts` - JWT utilities
+- `services/api/src/utils/password.ts` - Password hashing
+- `services/api/src/models/` - Database models (User, Topic, Message, TopicMember)
+- `services/websocket/src/db/` - WebSocket database connection
+- `services/websocket/src/models/` - WebSocket database models
 - `src/lib/api.ts` - Frontend API client
 
 **Security Enhancements**:
@@ -990,11 +990,11 @@ showToast('Success!', 'success');
 
 ## Backend Services Documentation
 
-### API Service (`backend/api/`)
+### API Service (`services/api/`)
 
 #### Structure
 ```
-backend/api/
+services/api/
 ├── src/
 │   ├── server.ts           # Express server setup
 │   ├── controllers/        # Route handlers
@@ -1058,11 +1058,11 @@ backend/api/
 
 ---
 
-### WebSocket Service (`backend/websocket/`)
+### WebSocket Service (`services/websocket/`)
 
 #### Structure
 ```
-backend/websocket/
+services/websocket/
 ├── src/
 │   └── server.ts           # Socket.IO server
 ├── Dockerfile

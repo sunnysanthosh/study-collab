@@ -80,7 +80,7 @@ docker exec studycollab-db pg_isready -U studycollab
 **Order:** 1st backend service (depends on database)
 
 **Steps:**
-1. Change to `backend/api` directory
+1. Change to `services/api` directory
 2. Start with `npm run dev` (background process)
 3. Capture PID
 4. Wait for health check: `http://localhost:3001/health`
@@ -106,7 +106,7 @@ docker exec studycollab-db pg_isready -U studycollab
 **Order:** 2nd backend service (depends on database)
 
 **Steps:**
-1. Change to `backend/websocket` directory
+1. Change to `services/websocket` directory
 2. Start with `npm run dev` (background process)
 3. Capture PID
 4. Wait 2 seconds (no HTTP health check)
@@ -390,7 +390,7 @@ If startup fails:
 5. **Manual Start for Debugging**
    ```bash
    # Start services one by one to see errors
-   cd backend/api && npm run dev
+   cd services/api && npm run dev
    ```
 
 ---

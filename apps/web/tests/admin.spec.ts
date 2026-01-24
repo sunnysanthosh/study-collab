@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test.use({ storageState: 'tests/e2e/.auth/admin.json' });
+test.use({ storageState: 'tests/.auth/admin.json' });
 test('admin dashboard loads stats and users', async ({ page }) => {
   await page.goto('/admin');
   const statsResponse = await page.waitForResponse((response) =>

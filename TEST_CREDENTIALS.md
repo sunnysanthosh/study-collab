@@ -9,7 +9,7 @@
 Run the seed script to create test users:
 
 ```bash
-cd backend/api
+cd services/api
 npm run seed
 ```
 

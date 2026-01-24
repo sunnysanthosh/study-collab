@@ -51,7 +51,7 @@ npm install
 ### Step 2: Install Backend API Dependencies
 
 ```bash
-cd backend/api
+cd services/api
 npm install
 ```
 
@@ -106,10 +106,10 @@ NEXT_PUBLIC_SOCKET_URL=http://localhost:3002
 EOF
 ```
 
-Create `.env` in `backend/api`:
+Create `.env` in `services/api`:
 
 ```bash
-cd backend/api
+cd services/api
 cat > .env << EOF
 NODE_ENV=development
 PORT=3001
@@ -119,7 +119,7 @@ FRONTEND_URL=http://localhost:3000
 EOF
 ```
 
-Create `.env` in `backend/websocket`:
+Create `.env` in `services/websocket`:
 
 ```bash
 cd ../websocket
@@ -142,13 +142,13 @@ npm run dev
 
 #### Terminal 2: Backend API
 ```bash
-cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab/backend/api
+cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab/services/api
 npm run dev
 ```
 
 #### Terminal 3: WebSocket Service
 ```bash
-cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab/backend/websocket
+cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab/services/websocket
 npm run dev
 ```
 
@@ -159,7 +159,7 @@ npm run dev
 ### Automated Tests (Recommended)
 ```bash
 # Backend unit/integration
-cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab/backend/api
+cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab/services/api
 npm test
 
 # Frontend unit tests
@@ -167,7 +167,7 @@ cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab
 npm test
 
 # WebSocket integration tests
-cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab/backend/websocket
+cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab/services/websocket
 npm test
 
 # API-focused E2E script (services must be running)
@@ -181,7 +181,7 @@ npx playwright install
 ./scripts/run-e2e.sh
 
 # Optional: disable rate limiting for repeated E2E logins
-# DISABLE_RATE_LIMIT=true npm run dev  (run in backend/api)
+# DISABLE_RATE_LIMIT=true npm run dev  (run in services/api)
 npm run test:e2e
 ```
 
@@ -337,7 +337,7 @@ rm -rf node_modules package-lock.json
 npm install
 
 # Same for backend services
-cd backend/api
+cd services/api
 rm -rf node_modules package-lock.json
 npm install
 
@@ -357,7 +357,7 @@ npm install
 
 ```bash
 # Rebuild TypeScript
-cd backend/api
+cd services/api
 npm run build
 
 cd ../websocket

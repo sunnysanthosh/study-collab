@@ -10,8 +10,8 @@
 
 ### Files to Push:
 - `PROJECT_STATUS.md` (622 lines) - Comprehensive context reference
-- `backend/api/logs/.gitkeep` - Preserves logs directory structure
-- `backend/api/uploads/.gitkeep` - Preserves uploads directory structure
+- `services/api/logs/.gitkeep` - Preserves logs directory structure
+- `services/api/uploads/.gitkeep` - Preserves uploads directory structure
 
 ## Push Options
 
@@ -49,8 +49,8 @@ git push origin main
 
 After pushing, verify on GitHub:
 - ✅ PROJECT_STATUS.md appears in root directory
-- ✅ backend/api/logs/.gitkeep exists
-- ✅ backend/api/uploads/.gitkeep exists
+- ✅ services/api/logs/.gitkeep exists
+- ✅ services/api/uploads/.gitkeep exists
 - ✅ All tags are present (v0.1, v0.2, v0.4, v0.5, v0.5.1)
 
 ## All Artifacts Status

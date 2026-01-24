@@ -37,13 +37,13 @@ npm run dev
 
 **Terminal 2 - API:**
 ```bash
-cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab/backend/api
+cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab/services/api
 npm run dev
 ```
 
 **Terminal 3 - WebSocket:**
 ```bash
-cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab/backend/websocket
+cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab/services/websocket
 npm run dev
 ```
 
@@ -58,7 +58,7 @@ npm run dev
    npm install
    
    # Backend API
-   cd backend/api
+   cd services/api
    npm install
    
    # WebSocket
@@ -79,8 +79,8 @@ npm run dev
 
 3. **Environment variables set?**
    - Frontend: `.env.local` (created automatically)
-   - API: `backend/api/.env` (created automatically)
-   - WebSocket: `backend/websocket/.env` (created automatically)
+   - API: `services/api/.env` (created automatically)
+   - WebSocket: `services/websocket/.env` (created automatically)
 
 ---
 

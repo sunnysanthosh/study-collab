@@ -193,7 +193,7 @@ tail -f /tmp/studycollab/*.log
 ./scripts/status.sh
 
 # Manual start for debugging
-cd backend/api && npm run dev
+cd services/api && npm run dev
 ```
 
 ### Docker Not Running

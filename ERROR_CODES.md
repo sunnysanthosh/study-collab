@@ -114,7 +114,7 @@ cd /Users/santhoshsrinivas/MyApps/iLearn/study-collab
 npm install
 
 # Backend API
-cd backend/api
+cd services/api
 npm install
 
 # WebSocket
@@ -142,7 +142,7 @@ tail -f /tmp/studycollab/Frontend.log
 
 **Check for TypeScript errors:**
 ```bash
-cd backend/api
+cd services/api
 npm run build
 
 cd ../websocket
@@ -152,15 +152,15 @@ npm run build
 **Check environment variables:**
 ```bash
 # Verify .env files exist
-ls -la backend/api/.env
-ls -la backend/websocket/.env
+ls -la services/api/.env
+ls -la services/websocket/.env
 ls -la .env.local
 ```
 
 **Manual start for debugging:**
 ```bash
 # Start service manually to see errors
-cd backend/api
+cd services/api
 npm run dev
 ```
 
@@ -186,7 +186,7 @@ tail -f /tmp/studycollab/WebSocket.log
 ```
 
 **Check CORS settings:**
-Verify `FRONTEND_URL` in `backend/websocket/.env` matches frontend URL.
+Verify `FRONTEND_URL` in `services/websocket/.env` matches frontend URL.
 
 **Check browser console:**
 - Open browser DevTools → Console
@@ -231,7 +231,7 @@ ps aux | grep "npm run dev" | grep api
 lsof -ti:3001 | xargs kill -9
 
 # Start manually
-cd backend/api
+cd services/api
 npm run dev
 ```
 
@@ -283,7 +283,7 @@ NEXT_PUBLIC_API_URL=http://localhost:3001
 NEXT_PUBLIC_SOCKET_URL=http://localhost:3002
 ```
 
-Backend API (`backend/api/.env`):
+Backend API (`services/api/.env`):
 ```bash
 NODE_ENV=development
 PORT=3001
@@ -292,7 +292,7 @@ JWT_SECRET=your-secret-key-change-in-production
 FRONTEND_URL=http://localhost:3000
 ```
 
-WebSocket (`backend/websocket/.env`):
+WebSocket (`services/websocket/.env`):
 ```bash
 NODE_ENV=development
 PORT=3002
@@ -395,7 +395,7 @@ rm -rf node_modules package-lock.json
 npm install
 
 # Backend API
-cd backend/api
+cd services/api
 rm -rf node_modules package-lock.json
 npm install
 

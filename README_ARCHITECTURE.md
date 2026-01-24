@@ -31,14 +31,14 @@
 
    **Backend API:**
    ```bash
-   cd backend/api
+   cd services/api
    npm install
    npm run dev
    ```
 
    **WebSocket Service:**
    ```bash
-   cd backend/websocket
+   cd services/websocket
    npm install
    npm run dev
    ```

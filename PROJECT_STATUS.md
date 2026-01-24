@@ -128,13 +128,13 @@
 
 2. **API Service** (Express.js)
    - Port: 3001
-   - Location: `study-collab/backend/api/`
+  - Location: `study-collab/services/api/`
    - Framework: Express.js with TypeScript
    - Database: PostgreSQL
 
 3. **WebSocket Service** (Socket.IO)
    - Port: 3002
-   - Location: `study-collab/backend/websocket/`
+  - Location: `study-collab/services/websocket/`
    - Framework: Socket.IO with TypeScript
    - Database: PostgreSQL (for message persistence)
 
@@ -179,27 +179,27 @@ study-collab/
 
 ### Configuration Files
 - `package.json` - Frontend dependencies
-- `backend/api/package.json` - API dependencies
-- `backend/websocket/package.json` - WebSocket dependencies
+- `services/api/package.json` - API dependencies
+- `services/websocket/package.json` - WebSocket dependencies
 - `docker-compose.yml` - Service orchestration
 - `tsconfig.json` - TypeScript configuration
 - `.gitignore` - Git ignore rules
 
 ### Database Files
-- `backend/api/src/db/schema.sql` - Database schema
-- `backend/api/src/db/migrate.ts` - Initial migration
-- `backend/api/src/db/migrate-v0.5.ts` - v0.5 migration
-- `backend/api/src/db/seed.ts` - Demo data seeding
-- `backend/api/src/db/reset-demo.ts` - Demo data reset
+- `services/api/src/db/schema.sql` - Database schema
+- `services/api/src/db/migrate.ts` - Initial migration
+- `services/api/src/db/migrate-v0.5.ts` - v0.5 migration
+- `services/api/src/db/seed.ts` - Demo data seeding
+- `services/api/src/db/reset-demo.ts` - Demo data reset
 
 ### Core Backend Files
-- `backend/api/src/server.ts` - API server entry point
-- `backend/api/src/utils/logger.ts` - Winston logger
-- `backend/api/src/utils/errorTracker.ts` - Error tracking
-- `backend/api/src/middleware/errorHandler.ts` - Error handling
-- `backend/api/src/middleware/requestLogger.ts` - Request logging
-- `backend/api/src/middleware/auth.ts` - JWT authentication
-- `backend/api/src/db/connection.ts` - Database connection
+- `services/api/src/server.ts` - API server entry point
+- `services/api/src/utils/logger.ts` - Winston logger
+- `services/api/src/utils/errorTracker.ts` - Error tracking
+- `services/api/src/middleware/errorHandler.ts` - Error handling
+- `services/api/src/middleware/requestLogger.ts` - Request logging
+- `services/api/src/middleware/auth.ts` - JWT authentication
+- `services/api/src/db/connection.ts` - Database connection
 
 ### Core Frontend Files
 - `src/app/layout.tsx` - Root layout
@@ -256,7 +256,7 @@ study-collab/
 
 ### File Storage
 - **Current:** Local filesystem
-- **Location:** `backend/api/uploads/`
+- **Location:** `services/api/uploads/`
 - **Organization:** By type (general, avatar, etc.)
 - **Max Size:** 10MB
 - **Future:** Cloud storage (S3, Azure Blob)
@@ -376,7 +376,7 @@ study-collab/
 ### Database Operations
 ```bash
 # Run migrations
-cd backend/api
+cd services/api
 npm run migrate
 
 # Seed demo data
@@ -484,7 +484,7 @@ npm run reset:demo
 
 ### Log Files Location
 ```
-backend/api/logs/
+services/api/logs/
 ├── error-YYYY-MM-DD.log          # Error logs (14 days)
 ├── combined-YYYY-MM-DD.log        # All logs (30 days)
 ├── http-YYYY-MM-DD.log            # HTTP logs (7 days)
@@ -605,7 +605,7 @@ const result = await query('SELECT * FROM users WHERE id = $1', [userId]);
 3. **Use asyncHandler** - For async route handlers
 4. **Include context** - In all log statements
 5. **Test locally** - Use demo mode for quick testing
-6. **Check logs** - In `backend/api/logs/` for debugging
+6. **Check logs** - In `services/api/logs/` for debugging
 
 ---
 
