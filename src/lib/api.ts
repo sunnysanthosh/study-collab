@@ -13,16 +13,16 @@ class ApiClient {
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
     // Load token from localStorage
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && typeof localStorage?.getItem === 'function') {
       this.token = localStorage.getItem('studycollab_token');
     }
   }
 
   setToken(token: string | null) {
     this.token = token;
-    if (token && typeof window !== 'undefined') {
+    if (token && typeof window !== 'undefined' && typeof localStorage?.setItem === 'function') {
       localStorage.setItem('studycollab_token', token);
-    } else if (typeof window !== 'undefined') {
+    } else if (typeof window !== 'undefined' && typeof localStorage?.removeItem === 'function') {
       localStorage.removeItem('studycollab_token');
     }
   }
@@ -141,13 +141,25 @@ export const userApi = {
 export const topicApi = {
   getTopics: async (filters?: {
     search?: string;
+    category?: string;
     subject?: string;
     difficulty?: string;
+    tags?: string[];
+    limit?: number;
+    offset?: number;
+    sort?: 'created_at' | 'title';
+    order?: 'asc' | 'desc';
   }) => {
     const params = new URLSearchParams();
     if (filters?.search) params.append('search', filters.search);
+    if (filters?.category) params.append('category', filters.category);
     if (filters?.subject) params.append('subject', filters.subject);
     if (filters?.difficulty) params.append('difficulty', filters.difficulty);
+    if (filters?.tags && filters.tags.length > 0) params.append('tags', filters.tags.join(','));
+    if (filters?.limit !== undefined) params.append('limit', String(filters.limit));
+    if (filters?.offset !== undefined) params.append('offset', String(filters.offset));
+    if (filters?.sort) params.append('sort', filters.sort);
+    if (filters?.order) params.append('order', filters.order);
     
     const query = params.toString();
     return api.get(`/api/topics${query ? `?${query}` : ''}`);
@@ -160,6 +172,7 @@ export const topicApi = {
   createTopic: async (topic: {
     title: string;
     description?: string;
+    category?: string;
     subject?: string;
     difficulty?: string;
     tags?: string[];
@@ -173,6 +186,28 @@ export const topicApi = {
 
   leaveTopic: async (id: string) => {
     return api.post(`/api/topics/${id}/leave`);
+  },
+
+  getFavorites: async () => {
+    return api.get('/api/topics/favorites/list');
+  },
+
+  addFavorite: async (id: string) => {
+    return api.post(`/api/topics/${id}/favorite`);
+  },
+
+  removeFavorite: async (id: string) => {
+    return api.delete(`/api/topics/${id}/favorite`);
+  },
+};
+
+// Admin API
+export const adminApi = {
+  getStats: async () => {
+    return api.get('/api/admin/stats');
+  },
+  getUsers: async (limit = 50, offset = 0) => {
+    return api.get(`/api/admin/users?limit=${limit}&offset=${offset}`);
   },
 };
 

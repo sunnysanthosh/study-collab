@@ -5,6 +5,24 @@ All notable changes to StudyCollab will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.3] - 2026-01-24
+
+### Added
+- Coverage thresholds for backend and frontend test suites
+- Backend controller tests for auth and user profile flows
+- Frontend tests for the admin add-topic form
+
+### Changed
+- Vitest config now scopes frontend tests to `src/` only
+- Frontend API client guards localStorage access in test/runtime
+- Admin dashboard table header markup corrected
+
+### Testing
+- Backend tests: 6 files, 15 tests passing
+- Frontend tests: 3 files, 5 tests passing
+
+---
+
 ## [0.5.2] - 2026-01-24
 
 ### Added
@@ -23,9 +41,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Message pagination in API and UI
   - File upload progress indicators
 
+- **Topic organization**
+  - Topic categories
+  - Favorites/bookmarks
+
+- **Testing infrastructure**
+  - Vitest setup for API and frontend
+  - Initial unit tests for controllers and components
+  - CI workflow for test execution
+
 ### Changed
 - Database migration is now idempotent (safe re-runs)
 - Notification flow updated to emit realtime events
+- Admin dashboard wired to live data
+- Next.js upgraded to resolve security advisories
 
 ### Security
 - Helmet configured for cross-origin resource policy
@@ -33,6 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Testing
 - End-to-end tests re-run (14/14 pass)
+- Added unit tests for API controllers/models and frontend components
 
 ---
 

@@ -3,21 +3,68 @@
 import { Shell } from "@/components/layout/Shell";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
+import { useEffect, useState } from "react";
+import { adminApi } from "@/lib/api";
+import { useToast } from "@/contexts/ToastContext";
+
+interface AdminUser {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    created_at: string;
+}
+
+interface AdminStats {
+    totalUsers: number;
+    activeTopics: number;
+    pendingRequests: number;
+    onlineNow: number;
+}
 
 export default function AdminDashboard() {
-    // Mock data
-    const users = [
-        { id: 1, name: "Alice Johnson", email: "alice@school.edu", status: "Pending", topic: "Math 101" },
-        { id: 2, name: "Bob Smith", email: "bob@school.edu", status: "Active", topic: "Physics 202" },
-        { id: 3, name: "Charlie Brown", email: "charlie@school.edu", status: "Pending", topic: "Chemistry 303" },
-    ];
+    const { showToast } = useToast();
+    const [users, setUsers] = useState<AdminUser[]>([]);
+    const [stats, setStats] = useState<AdminStats | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
 
-    const stats = [
-        { label: 'Total Users', value: '1,234', color: 'var(--primary)' },
-        { label: 'Active Topics', value: '45', color: 'var(--success)' },
-        { label: 'Pending Requests', value: '12', color: 'var(--warning)' },
-        { label: 'Online Now', value: '89', color: 'var(--secondary)' },
-    ];
+    useEffect(() => {
+        const loadAdminData = async () => {
+            setIsLoading(true);
+            try {
+                const [statsResponse, usersResponse] = await Promise.all([
+                    adminApi.getStats(),
+                    adminApi.getUsers(50, 0),
+                ]);
+
+                if (statsResponse.error) {
+                    showToast(statsResponse.error, 'error');
+                } else if (statsResponse.data?.stats) {
+                    setStats(statsResponse.data.stats);
+                }
+
+                if (usersResponse.error) {
+                    showToast(usersResponse.error, 'error');
+                } else if (usersResponse.data?.users) {
+                    setUsers(usersResponse.data.users);
+                }
+            } catch (error) {
+                console.error('Error loading admin data:', error);
+                showToast('Failed to load admin data', 'error');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        loadAdminData();
+    }, [showToast]);
+
+    const statCards = stats ? [
+        { label: 'Total Users', value: stats.totalUsers.toString(), color: 'var(--primary)' },
+        { label: 'Active Topics', value: stats.activeTopics.toString(), color: 'var(--success)' },
+        { label: 'Pending Requests', value: stats.pendingRequests.toString(), color: 'var(--warning)' },
+        { label: 'Online Now', value: stats.onlineNow.toString(), color: 'var(--secondary)' },
+    ] : [];
 
     return (
         <Shell>
@@ -34,7 +81,7 @@ export default function AdminDashboard() {
                 gap: '1.5rem',
                 marginBottom: '2rem'
             }}>
-                {stats.map((stat) => (
+                {statCards.map((stat) => (
                     <div key={stat.label} className="glass-panel" style={{ padding: '1.5rem' }}>
                         <div style={{ 
                             fontSize: '0.9rem', 
@@ -64,7 +111,7 @@ export default function AdminDashboard() {
                     flexWrap: 'wrap',
                     gap: '1rem'
                 }}>
-                    <h2 style={{ fontSize: '1.5rem', margin: 0 }}>User Requests</h2>
+                    <h2 style={{ fontSize: '1.5rem', margin: 0 }}>Users</h2>
                     <Link href="/admin/add-topic" style={{ textDecoration: 'none' }}>
                         <Button>Add New Topic</Button>
                     </Link>
@@ -94,25 +141,37 @@ export default function AdminDashboard() {
                                     textAlign: 'left',
                                     fontWeight: 600,
                                     fontSize: '0.9rem'
-                                }}>Requested Topic</th>
+                                }}>Email</th>
                                 <th style={{ 
                                     padding: '1rem', 
                                     color: 'hsl(var(--muted-foreground))',
                                     textAlign: 'left',
                                     fontWeight: 600,
                                     fontSize: '0.9rem'
-                                }}>Status</th>
+                                }}>Role</th>
                                 <th style={{ 
                                     padding: '1rem', 
                                     color: 'hsl(var(--muted-foreground))',
                                     textAlign: 'left',
                                     fontWeight: 600,
                                     fontSize: '0.9rem'
-                                }}>Actions</th>
+                                }}>Joined</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {users.map((user, index) => (
+                            {isLoading ? (
+                                <tr>
+                                    <td colSpan={4} style={{ padding: '2rem', textAlign: 'center', color: 'hsl(var(--muted-foreground))' }}>
+                                        Loading users...
+                                    </td>
+                                </tr>
+                            ) : users.length === 0 ? (
+                                <tr>
+                                    <td colSpan={4} style={{ padding: '2rem', textAlign: 'center', color: 'hsl(var(--muted-foreground))' }}>
+                                        No users found.
+                                    </td>
+                                </tr>
+                            ) : users.map((user) => (
                                 <tr 
                                     key={user.id} 
                                     style={{ 
@@ -131,33 +190,24 @@ export default function AdminDashboard() {
                                     <td style={{ padding: '1rem', color: 'hsl(var(--muted-foreground))' }}>
                                         {user.email}
                                     </td>
-                                    <td style={{ padding: '1rem' }}>{user.topic}</td>
                                     <td style={{ padding: '1rem' }}>
                                         <span style={{
                                             padding: '0.25rem 0.75rem',
                                             borderRadius: 'var(--radius-full)',
                                             fontSize: '0.85rem',
                                             fontWeight: 500,
-                                            background: user.status === 'Active' 
-                                                ? 'hsl(var(--success) / 0.2)' 
-                                                : 'hsl(var(--warning) / 0.2)',
-                                            color: user.status === 'Active' 
-                                                ? 'hsl(var(--success))' 
-                                                : 'hsl(var(--warning))'
+                                            background: user.role === 'admin'
+                                                ? 'hsl(var(--warning) / 0.2)'
+                                                : 'hsl(var(--success) / 0.2)',
+                                            color: user.role === 'admin'
+                                                ? 'hsl(var(--warning))'
+                                                : 'hsl(var(--success))'
                                         }}>
-                                            {user.status}
+                                            {user.role}
                                         </span>
                                     </td>
-                                    <td style={{ padding: '1rem' }}>
-                                        <Button 
-                                            variant="ghost" 
-                                            style={{ 
-                                                padding: '0.5rem 1rem',
-                                                fontSize: '0.85rem'
-                                            }}
-                                        >
-                                            {user.status === 'Pending' ? 'Approve' : 'View'}
-                                        </Button>
+                                    <td style={{ padding: '1rem', color: 'hsl(var(--muted-foreground))' }}>
+                                        {new Date(user.created_at).toLocaleDateString()}
                                     </td>
                                 </tr>
                             ))}

@@ -1,14 +1,14 @@
 # Next Steps - StudyCollab Development Roadmap
 
-**Current Version:** v0.5.2  
+**Current Version:** v0.5.3  
 **Last Updated:** 2026-01-24  
-**Status:** Security hardening + realtime notifications complete ✅
+**Status:** Test expansion + coverage thresholds complete ✅
 
 ---
 
 ## 📊 Current Status Summary
 
-### ✅ Completed (v0.5.2)
+### ✅ Completed (v0.5.3)
 - ✅ Complete PostgreSQL database integration
 - ✅ Real JWT authentication system
 - ✅ Password hashing with bcrypt

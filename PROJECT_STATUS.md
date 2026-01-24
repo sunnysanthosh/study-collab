@@ -1,7 +1,7 @@
 # StudyCollab - Project Status & Context Reference
 
 **Last Updated:** 2026-01-24  
-**Current Version:** v0.5.2  
+**Current Version:** v0.5.3  
 **Status:** Active Development - Production Ready
 
 ---
@@ -25,6 +25,7 @@
 | v0.5 | 2024-12-29 | File upload, notifications & enhanced messages |
 | **v0.5.1** | **2024-12-29** | **Comprehensive logging system** ⭐ |
 | **v0.5.2** | **2026-01-24** | **Security hardening + realtime notifications** ⭐ |
+| **v0.5.3** | **2026-01-24** | **Expanded tests + coverage thresholds** ⭐ |
 
 ---
 
@@ -600,7 +601,7 @@ const result = await query('SELECT * FROM users WHERE id = $1', [userId]);
 
 **This document serves as a context reference for future development sessions.**
 
-**Last Updated:** 2024-12-29  
-**Version:** v0.5.1  
+**Last Updated:** 2026-01-24  
+**Version:** v0.5.2  
 **Status:** ✅ Production Ready
 
