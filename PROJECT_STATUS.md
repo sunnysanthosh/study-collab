@@ -1,8 +1,8 @@
 # StudyCollab - Project Status & Context Reference
 
 **Last Updated:** 2026-01-25  
-**Current Version:** v0.5.4  
-**Status:** Active Development - Production Ready
+**Current Version:** v0.6  
+**Status:** Released - Production Ready
 
 ---
 
@@ -27,6 +27,7 @@
 | **v0.5.2** | **2026-01-24** | **Security hardening + realtime notifications** ⭐ |
 | **v0.5.3** | **2026-01-24** | **Expanded tests + coverage thresholds** ⭐ |
 | **v0.5.4** | **2026-01-25** | **E2E automation + CI stabilization** ⭐ |
+| **v0.6** | **2026-01-25** | **Search & filtering, Admin CRUD + activity logs** ⭐ |
 
 ---
 
@@ -278,16 +279,16 @@ study-collab/
 
 ## 🧪 Testing Status
 
-### End-to-End Testing (v0.5.4)
-- **Playwright E2E:** 5 tests passing
-- **API Script:** 14/14 pass
+### End-to-End Testing (v0.6)
+- **Playwright E2E:** 7 tests passing
 - **Last Run:** 2026-01-25
 
 ### Automated Tests
-- **Backend:** 13 files, 37 tests passing
-- **Frontend:** 4 files, 6 tests passing
-- **WebSocket:** 1 file, 1 test passing
-- **CI Workflow:** `.github/workflows/ci.yml` pushed with Postgres + E2E jobs
+- **Backend:** 15 files, 47 tests passing
+- **Frontend:** 5 files, 7 tests passing
+- **WebSocket:** 1 file, 2 tests passing
+- **Total unit/integration:** 21 files, 56 tests
+- **CI Workflow:** `.github/workflows/ci.yml` with Postgres + Redis + E2E jobs
 
 ### Test Coverage
 - ✅ Service Health Checks
@@ -297,8 +298,9 @@ study-collab/
 - ✅ Message Features (create, edit, delete, reactions)
 - ✅ Message pagination
 - ✅ Profile Management
-- ✅ Admin dashboard data
+- ✅ Admin dashboard (users, topics, activity logs, health)
 - ✅ Favorites/bookmarks
+- ✅ Topic search & filters
 
 ### Test Scripts
 - `test-script.sh` - Automated API E2E testing
@@ -321,9 +323,10 @@ study-collab/
 - ✅ Topic creation and management
 
 ### Admin Features
-- ✅ Admin dashboard (basic)
-- ⏳ User management (planned)
-- ⏳ Content moderation (planned)
+- ✅ Admin dashboard (stats, system health)
+- ✅ User management (CRUD: edit, delete; self-delete/last-admin safeguards)
+- ✅ Topic moderation (list with meta, delete any topic)
+- ✅ Activity logs (user/topic mutations, paginated list)
 
 ### Technical Features
 - ✅ Real-time WebSocket communication
@@ -338,14 +341,15 @@ study-collab/
 ## 📋 Pending Features (from NEXT_STEPS.md)
 
 ### High Priority
-- ⏳ Advanced search and filtering
+- ~~Advanced search and filtering~~ (done in v0.6)
+- ~~Admin dashboard enhancements~~ (done in v0.6)
+- ⏳ Performance + indexing (DB indexes, latency)
 
 ### Medium Priority
-- ⏳ Admin dashboard enhancements
-- ⏳ Full E2E automation (Playwright/Cypress)
-- ⏳ WebSocket integration tests
-- ⏳ Database integration tests
-- ⏳ Performance optimization
+- ✅ Full E2E automation (Playwright, 7 tests)
+- ✅ WebSocket integration tests
+- ✅ Database integration tests
+- ⏳ Performance optimization (caching, query tuning)
 
 ### Long Term
 - ⏳ Video/audio calls
@@ -612,6 +616,6 @@ const result = await query('SELECT * FROM users WHERE id = $1', [userId]);
 **This document serves as a context reference for future development sessions.**
 
 **Last Updated:** 2026-01-24  
-**Version:** v0.5.2  
-**Status:** ✅ Production Ready
+**Version:** v0.6  
+**Status:** ✅ Released - Production Ready
 

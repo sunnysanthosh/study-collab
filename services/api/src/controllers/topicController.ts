@@ -8,7 +8,7 @@ import { CustomError } from '../middleware/errorHandler';
 
 export const getTopics = async (req: Request, res: Response) => {
   try {
-    const { search, subject, difficulty, category, tags, limit, offset, sort, order } = req.query;
+    const { search, subject, difficulty, category, tags, limit, offset, sort, order, created_from, created_to } = req.query;
     
     const filters: any = {};
     if (search) filters.search = search as string;
@@ -25,8 +25,14 @@ export const getTopics = async (req: Request, res: Response) => {
     }
     if (limit) filters.limit = Math.min(parseInt(limit as string, 10) || 50, 100);
     if (offset) filters.offset = Math.max(parseInt(offset as string, 10) || 0, 0);
-    if (sort && (sort === 'created_at' || sort === 'title')) filters.sort = sort;
+    if (sort && (sort === 'created_at' || sort === 'title' || sort === 'popularity')) filters.sort = sort;
     if (order && (order === 'asc' || order === 'desc')) filters.order = order;
+    if (created_from && !Number.isNaN(Date.parse(String(created_from)))) {
+      filters.createdFrom = String(created_from);
+    }
+    if (created_to && !Number.isNaN(Date.parse(String(created_to)))) {
+      filters.createdTo = String(created_to);
+    }
     
     const topics = await TopicModel.getAllTopics(filters);
     

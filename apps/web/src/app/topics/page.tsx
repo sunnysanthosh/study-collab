@@ -29,6 +29,10 @@ export default function TopicsPage() {
     const [selectedTag, setSelectedTag] = useState<string | null>(null);
     const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+    const [selectedDifficulty, setSelectedDifficulty] = useState<string | null>(null);
+    const [sortBy, setSortBy] = useState<'created_at' | 'popularity'>('created_at');
+    const [createdFrom, setCreatedFrom] = useState('');
+    const [createdTo, setCreatedTo] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
     const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
 
@@ -42,7 +46,7 @@ export default function TopicsPage() {
 
     useEffect(() => {
         loadTopics();
-    }, [debouncedSearch, selectedTag, selectedSubject, selectedCategory]);
+    }, [debouncedSearch, selectedTag, selectedSubject, selectedCategory, selectedDifficulty, sortBy, createdFrom, createdTo]);
 
     useEffect(() => {
         if (user) {
@@ -59,10 +63,13 @@ export default function TopicsPage() {
                 search: debouncedSearch || undefined,
                 category: selectedCategory || undefined,
                 subject: selectedSubject || undefined,
+                difficulty: selectedDifficulty || undefined,
                 tags: selectedTag ? [selectedTag] : undefined,
                 limit: 100,
-                sort: 'created_at',
+                sort: sortBy,
                 order: 'desc',
+                createdFrom: createdFrom || undefined,
+                createdTo: createdTo || undefined,
             });
             if (response.error) {
                 showToast(response.error, 'error');
@@ -153,7 +160,25 @@ export default function TopicsPage() {
         return Array.from(categorySet);
     }, [topics]);
 
-    const hasFilters = !!debouncedSearch || !!selectedTag || !!selectedSubject || !!selectedCategory;
+    const allDifficulties = useMemo(() => {
+        const difficultySet = new Set<string>();
+        topics.forEach(topic => {
+            if (topic.difficulty) {
+                difficultySet.add(topic.difficulty);
+            }
+        });
+        return Array.from(difficultySet);
+    }, [topics]);
+
+    const hasFilters =
+        !!debouncedSearch ||
+        !!selectedTag ||
+        !!selectedSubject ||
+        !!selectedCategory ||
+        !!selectedDifficulty ||
+        !!createdFrom ||
+        !!createdTo ||
+        sortBy !== 'created_at';
 
     return (
         <Shell>
@@ -175,7 +200,71 @@ export default function TopicsPage() {
                     />
                 </div>
                 
-                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                        <label htmlFor="sortBy" style={{ fontSize: '0.9rem', color: 'hsl(var(--muted-foreground))' }}>
+                            Sort:
+                        </label>
+                        <select
+                            id="sortBy"
+                            aria-label="Sort by"
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value as 'created_at' | 'popularity')}
+                            style={{
+                                padding: '0.45rem 0.75rem',
+                                borderRadius: 'var(--radius-md)',
+                                border: '1px solid hsl(var(--input))',
+                                background: 'transparent',
+                                color: 'hsl(var(--foreground))',
+                                fontSize: '0.85rem',
+                            }}
+                        >
+                            <option value="created_at">Newest</option>
+                            <option value="popularity">Most popular</option>
+                        </select>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                        <label htmlFor="createdFrom" style={{ fontSize: '0.9rem', color: 'hsl(var(--muted-foreground))' }}>
+                            From:
+                        </label>
+                        <input
+                            id="createdFrom"
+                            aria-label="Created from"
+                            type="date"
+                            value={createdFrom}
+                            onChange={(e) => setCreatedFrom(e.target.value)}
+                            style={{
+                                padding: '0.45rem 0.75rem',
+                                borderRadius: 'var(--radius-md)',
+                                border: '1px solid hsl(var(--input))',
+                                background: 'transparent',
+                                color: 'hsl(var(--foreground))',
+                                fontSize: '0.85rem',
+                            }}
+                        />
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                        <label htmlFor="createdTo" style={{ fontSize: '0.9rem', color: 'hsl(var(--muted-foreground))' }}>
+                            To:
+                        </label>
+                        <input
+                            id="createdTo"
+                            aria-label="Created to"
+                            type="date"
+                            value={createdTo}
+                            onChange={(e) => setCreatedTo(e.target.value)}
+                            style={{
+                                padding: '0.45rem 0.75rem',
+                                borderRadius: 'var(--radius-md)',
+                                border: '1px solid hsl(var(--input))',
+                                background: 'transparent',
+                                color: 'hsl(var(--foreground))',
+                                fontSize: '0.85rem',
+                            }}
+                        />
+                    </div>
                     {allCategories.length > 0 && (
                         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
                             <span style={{ fontSize: '0.9rem', color: 'hsl(var(--muted-foreground))' }}>Category:</span>
@@ -245,6 +334,43 @@ export default function TopicsPage() {
                                     }}
                                 >
                                     {subject}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    {allDifficulties.length > 0 && (
+                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                            <span style={{ fontSize: '0.9rem', color: 'hsl(var(--muted-foreground))' }}>Difficulty:</span>
+                            <button
+                                onClick={() => setSelectedDifficulty(null)}
+                                style={{
+                                    padding: '0.5rem 1rem',
+                                    borderRadius: 'var(--radius-md)',
+                                    border: `1px solid ${selectedDifficulty === null ? 'hsl(var(--primary))' : 'hsl(var(--input))'}`,
+                                    background: selectedDifficulty === null ? 'hsl(var(--primary) / 0.1)' : 'transparent',
+                                    color: selectedDifficulty === null ? 'hsl(var(--primary))' : 'hsl(var(--foreground))',
+                                    cursor: 'pointer',
+                                    fontSize: '0.85rem',
+                                }}
+                            >
+                                All
+                            </button>
+                            {allDifficulties.map(difficulty => (
+                                <button
+                                    key={difficulty}
+                                    onClick={() => setSelectedDifficulty(difficulty)}
+                                    style={{
+                                        padding: '0.5rem 1rem',
+                                        borderRadius: 'var(--radius-md)',
+                                        border: `1px solid ${selectedDifficulty === difficulty ? 'hsl(var(--primary))' : 'hsl(var(--input))'}`,
+                                        background: selectedDifficulty === difficulty ? 'hsl(var(--primary) / 0.1)' : 'transparent',
+                                        color: selectedDifficulty === difficulty ? 'hsl(var(--primary))' : 'hsl(var(--foreground))',
+                                        cursor: 'pointer',
+                                        fontSize: '0.85rem',
+                                    }}
+                                >
+                                    {difficulty}
                                 </button>
                             ))}
                         </div>

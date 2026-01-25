@@ -1,8 +1,8 @@
 # StudyCollab Development Journal
 
-**Version**: v0.3 (Phase 3)  
-**Last Updated**: 2024-12-21  
-**Status**: Active Development - Database Integration Complete
+**Version**: v0.6  
+**Last Updated**: 2026-01-25  
+**Status**: Released - Database Integration, Search, Admin & Activity Logs Complete
 
 ---
 
@@ -1421,6 +1421,15 @@ services/websocket/
 
 ## Version History
 
+### v0.6 - Advanced Search, Admin Dashboard & Activity Logs
+**Date**: 2026-01-25
+- Advanced search & filtering (topic full-text, subject, difficulty, date range, popularity sort)
+- Admin dashboard: user CRUD (edit, delete), topic moderation (list, delete any)
+- Stats: total messages; system health card (API status + timestamp)
+- Admin activity logs: `admin_activity_logs` table, logging for user/topic mutations, GET `/api/admin/activity-logs`
+- Tests: 56 unit/integration (API 47, frontend 7, WebSocket 2), 7 Playwright E2E
+- `VERSION_v0.6.md`, `CHANGELOG` [0.6.0], `E2E_TEST_REPORT`, `PROJECT_STATUS` updated
+
 ### v0.3 (Phase 3) - Database Integration & Real Authentication
 **Date**: 2024-12-21
 - PostgreSQL database integration
@@ -1467,12 +1476,14 @@ The foundation is now in place for continued development, with clear separation 
 - ✅ Real authentication implemented
 - ✅ WebSocket message persistence
 - ✅ Frontend-backend integration
-- ⏳ End-to-end testing in progress
+- ✅ Advanced search & filtering (v0.6)
+- ✅ Admin dashboard enhancements + activity logs (v0.6)
+- ✅ Unit/integration/E2E tests (56 + 7 Playwright)
 - ⏳ Production deployment preparation
 
 ---
 
 **Document Maintained By**: Development Team  
-**Last Review Date**: 2024-12-21  
-**Next Review**: After v0.3 testing completion
+**Last Review Date**: 2026-01-25  
+**Next Review**: After v0.7 or performance/indexing work
 

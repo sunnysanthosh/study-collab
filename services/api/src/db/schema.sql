@@ -110,6 +110,17 @@ CREATE TABLE IF NOT EXISTS token_blacklist (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
+-- Admin Activity Logs Table
+CREATE TABLE IF NOT EXISTS admin_activity_logs (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  admin_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  action VARCHAR(100) NOT NULL,
+  target_type VARCHAR(50) NOT NULL,
+  target_id VARCHAR(255),
+  metadata JSONB,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
 -- Indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_messages_topic_id ON messages(topic_id);
 CREATE INDEX IF NOT EXISTS idx_messages_user_id ON messages(user_id);
@@ -128,6 +139,8 @@ CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(user_id, read
 CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id ON user_sessions(user_id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_user_sessions_user_id_unique ON user_sessions(user_id);
 CREATE INDEX IF NOT EXISTS idx_token_blacklist_expires_at ON token_blacklist(expires_at);
+CREATE INDEX IF NOT EXISTS idx_admin_activity_logs_admin_user_id ON admin_activity_logs(admin_user_id);
+CREATE INDEX IF NOT EXISTS idx_admin_activity_logs_created_at ON admin_activity_logs(created_at);
 CREATE INDEX IF NOT EXISTS idx_topics_search ON topics USING GIN (
   to_tsvector('english', coalesce(title, '') || ' ' || coalesce(description, ''))
 );

@@ -59,8 +59,10 @@ export const getAllTopics = async (filters?: {
   tags?: string[];
   limit?: number;
   offset?: number;
-  sort?: 'created_at' | 'title';
+  sort?: 'created_at' | 'title' | 'popularity';
   order?: 'asc' | 'desc';
+  createdFrom?: string;
+  createdTo?: string;
 }): Promise<Topic[]> => {
   let sql = 'SELECT * FROM topics WHERE 1=1';
   const params: any[] = [];
@@ -98,9 +100,23 @@ export const getAllTopics = async (filters?: {
     paramCount++;
   }
 
-  const sortColumn = filters?.sort === 'title' ? 'title' : 'created_at';
   const sortOrder = filters?.order === 'asc' ? 'ASC' : 'DESC';
-  sql += ` ORDER BY ${sortColumn} ${sortOrder}`;
+  if (filters?.createdFrom) {
+    sql += ` AND created_at >= $${paramCount++}`;
+    params.push(filters.createdFrom);
+  }
+
+  if (filters?.createdTo) {
+    sql += ` AND created_at <= $${paramCount++}`;
+    params.push(filters.createdTo);
+  }
+
+  if (filters?.sort === 'popularity') {
+    sql += ` ORDER BY (SELECT COUNT(*) FROM topic_favorites tf WHERE tf.topic_id = topics.id) ${sortOrder}`;
+  } else {
+    const sortColumn = filters?.sort === 'title' ? 'title' : 'created_at';
+    sql += ` ORDER BY ${sortColumn} ${sortOrder}`;
+  }
 
   const limit = filters?.limit ?? 50;
   const offset = filters?.offset ?? 0;
@@ -170,5 +186,28 @@ export const deleteTopic = async (id: string): Promise<boolean> => {
   );
   
   return result.rowCount !== null && result.rowCount > 0;
+};
+
+export interface AdminTopicRow {
+  id: string;
+  title: string;
+  created_at: Date;
+  creator_name: string | null;
+  member_count: string;
+  message_count: string;
+}
+
+export const getAdminTopicList = async (limit = 50, offset = 0): Promise<AdminTopicRow[]> => {
+  const result = await query(
+    `SELECT t.id, t.title, t.created_at, u.name AS creator_name,
+        (SELECT COUNT(*)::text FROM topic_members tm WHERE tm.topic_id = t.id) AS member_count,
+        (SELECT COUNT(*)::text FROM messages m WHERE m.topic_id = t.id) AS message_count
+     FROM topics t
+     LEFT JOIN users u ON t.created_by = u.id
+     ORDER BY t.created_at DESC
+     LIMIT $1 OFFSET $2`,
+    [limit, offset]
+  );
+  return result.rows;
 };
 

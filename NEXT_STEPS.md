@@ -1,14 +1,16 @@
 # Next Steps - StudyCollab Development Roadmap
 
-**Current Version:** v0.5.6  
+**Current Version:** v0.6.0  
 **Last Updated:** 2026-01-25  
-**Status:** Redis broker added, CI + E2E stable
+**Status:** Admin dashboard enhancements + activity logs complete; version complete
 
 ---
 
 ## Current Status Summary
 
-### Completed (v0.5.x)
+### Completed (v0.6.0)
+- Advanced search + filtering (topic search, filters, sort by popularity, date range)
+- Admin dashboard: user CRUD, topic moderation, stats, system health, **activity logs**
 - PostgreSQL database integration
 - JWT authentication + token blacklist on logout
 - WebSocket message persistence + presence
@@ -23,15 +25,8 @@
 ## Prioritized Roadmap
 
 ### Short Term (2–4 weeks)
-1. Advanced Search and Filtering
-   - Topic search (full-text)
-   - Filters (subject, difficulty, date, popularity)
-   - Search suggestions + history
-   - Message search within topics
-2. Admin Dashboard Enhancements
-   - User management (CRUD)
-   - Topic moderation tools
-   - Analytics cards + system health
+1. ~~Advanced Search and Filtering~~ (done in v0.6.0)
+2. ~~Admin Dashboard Enhancements~~ (done in v0.6.0: user CRUD, topic moderation, stats, health, **activity logs**)
 3. Performance + Indexing (targeted)
    - Add DB indexes for topic, message, and notification queries
    - Measure API latency before/after
@@ -94,7 +89,11 @@
 
 ## Related Documentation
 
-- `VERSION_v0.4.md` - Current version details
+- `VERSION_v0.6.md` - v0.6 release notes, test results, implementation activities
+- `VERSION_v0.5.md` - v0.5 release notes
+- `VERSION_v0.4.md` - v0.4 release notes
+- `E2E_TEST_REPORT.md` - E2E test results (updated for v0.6)
+- `PROJECT_STATUS.md` - Project status and capabilities (updated for v0.6)
 - `DEVELOPMENT_JOURNAL.md` - Complete development history
 - `PHASE_3_JOURNAL.md` - Phase 3 implementation details
 - `ARCHITECTURE.md` - System architecture
@@ -102,5 +101,9 @@
 
 ---
 
-**Next Review:** After short-term milestones are done
+**Next Review:** After performance/indexing or medium-term work
+
+---
+
+**v0.6.0 release:** Complete. Admin activity logs added; Admin Dashboard enhancements (user CRUD, topic moderation, stats, system health, activity logs) fully implemented.
 

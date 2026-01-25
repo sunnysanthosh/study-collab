@@ -1,8 +1,8 @@
-# End-to-End Testing Report - StudyCollab v0.5.3
+# End-to-End Testing Report - StudyCollab v0.6
 
 **Date:** December 29, 2024  
-**Last Re-Run:** January 25, 2026  
-**Version:** v0.5.3 baseline (automated + manual)  
+**Last Re-Run:** 2026-01-25  
+**Version:** v0.6 baseline (automated + manual)  
 **Tester:** Automated + Manual Testing  
 **Status:** ✅ **ALL TESTS PASSED**
 
@@ -10,20 +10,23 @@
 
 ## Executive Summary
 
-Comprehensive end-to-end testing was performed on StudyCollab v0.5.3, covering new features and regression checks:
+Comprehensive end-to-end testing was performed on StudyCollab v0.6, covering new features and regression checks:
+- **v0.6:** Advanced search & filtering, Admin dashboard (user CRUD, topic moderation, stats, system health, **activity logs**)
 - File Upload System
 - Notifications System (API + realtime)
 - Message Features (Editing, Deletion, Reactions, Pagination)
 - Profile Management
 - Presence Indicators
 - Topic Categories + Favorites
-- Admin Dashboard (live data)
+- Admin Dashboard (live data, activity logs)
 
-**Test Results:** 14/14 E2E checks passed (100% success rate)
+**Test Results:** 7/7 Playwright E2E tests passed (100% success rate)
 
-**Automated Test Results:**
-- Backend unit/integration: 12 files, 35 tests passed
-- Frontend unit: 3 files, 5 tests passed
+**Automated Test Results (v0.6):**
+- Backend unit/integration: 15 files, 47 tests passed
+- Frontend unit: 5 files, 7 tests passed
+- WebSocket integration: 1 file, 2 tests passed
+- **Total unit/integration:** 21 files, 56 tests passed
 
 ---
 
@@ -413,23 +416,24 @@ All new tables created successfully:
 
 ## Conclusion
 
-**All end-to-end tests passed successfully.** The v0.5.3 baseline is stable and ready for UAT. Features including realtime notifications, presence indicators, pagination, favorites, and admin data integration function correctly with security controls in place.
+**All end-to-end tests passed successfully.** The v0.6 baseline is stable and released. Features including advanced search & filtering, admin user CRUD, topic moderation, activity logs, system health, realtime notifications, presence indicators, pagination, favorites, and admin data integration function correctly with security controls in place.
 
-**Status:** ✅ **APPROVED FOR RELEASE**
+**Status:** ✅ **APPROVED FOR RELEASE (v0.6)**
 
 ---
 
 ## Test Artifacts
 
-- **Automated Test Script:** `test-script.sh`
+- **Playwright E2E:** `npm run test:e2e` (7 tests) via `scripts/run-e2e.sh`
+- **Unit/Integration:** `npm run test:all` (56 tests: API 47, frontend 7, WebSocket 2)
 - **Test Results:** All tests passed
-- **Test Duration:** ~5 seconds (automated)
+- **Test Duration:** ~5 s (E2E), ~20 s (full suite)
 - **Manual Testing:** Completed
 - **Database Verification:** Completed
 
 ---
 
 **Report Generated:** December 29, 2024  
-**Baseline Re-Run:** January 25, 2026  
-**Next Review:** After v0.6 UAT
+**Baseline Re-Run:** 2026-01-25 (v0.6)  
+**Next Review:** After v0.7 or performance/indexing work
 

@@ -5,6 +5,32 @@ All notable changes to StudyCollab will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-01-25
+
+### Added
+- **Admin activity logs**
+  - `admin_activity_logs` table (admin_user_id, action, target_type, target_id, metadata, created_at)
+  - Logging for user update, user delete, and topic delete (best-effort; request not failed on log error)
+  - `GET /api/admin/activity-logs` with pagination
+  - Activity logs section on Admin Dashboard (Time, Admin, Action, Target, Details)
+
+- **Admin dashboard enhancements** (from v0.5.x)
+  - User management: Edit (name, email, role) and Delete with self-delete/last-admin safeguards
+  - Topic moderation: list with creator, member/message counts; delete any topic
+  - Stats: Total Messages; System Health card (API status + timestamp)
+  - Activity logs UI
+
+### Changed
+- Admin controller wires `AdminActivityLog` for user/topic mutations
+- Admin dashboard fetches and displays activity logs; refetches after edit/delete
+
+### Testing
+- API: admin controller tests for `getAdminActivityLogs`; `AdminActivityLog` mocked in update/delete tests
+- Frontend: AdminDashboard test asserts Activity logs section
+- Migration creates `admin_activity_logs` and indexes
+
+---
+
 ## [0.5.4] - 2026-01-25
 
 ### Added

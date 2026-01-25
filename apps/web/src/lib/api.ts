@@ -85,6 +85,13 @@ class ApiClient {
     });
   }
 
+  async patch<T>(endpoint: string, body?: any): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    });
+  }
+
   async delete<T>(endpoint: string): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, { method: 'DELETE' });
   }
@@ -147,8 +154,10 @@ export const topicApi = {
     tags?: string[];
     limit?: number;
     offset?: number;
-    sort?: 'created_at' | 'title';
+    sort?: 'created_at' | 'title' | 'popularity';
     order?: 'asc' | 'desc';
+    createdFrom?: string;
+    createdTo?: string;
   }) => {
     const params = new URLSearchParams();
     if (filters?.search) params.append('search', filters.search);
@@ -160,6 +169,8 @@ export const topicApi = {
     if (filters?.offset !== undefined) params.append('offset', String(filters.offset));
     if (filters?.sort) params.append('sort', filters.sort);
     if (filters?.order) params.append('order', filters.order);
+    if (filters?.createdFrom) params.append('created_from', filters.createdFrom);
+    if (filters?.createdTo) params.append('created_to', filters.createdTo);
     
     const query = params.toString();
     return api.get(`/api/topics${query ? `?${query}` : ''}`);
@@ -204,12 +215,58 @@ export const topicApi = {
 // Admin API
 export const adminApi = {
   getStats: async () => {
-    return api.get('/api/admin/stats');
+    return api.get<{ stats: { totalUsers: number; activeTopics: number; pendingRequests: number; onlineNow: number; totalMessages: number } }>('/api/admin/stats');
   },
   getUsers: async (limit = 50, offset = 0) => {
-    return api.get(`/api/admin/users?limit=${limit}&offset=${offset}`);
+    return api.get<{ users: AdminUser[]; limit: number; offset: number }>(`/api/admin/users?limit=${limit}&offset=${offset}`);
+  },
+  updateUser: async (id: string, updates: { name?: string; email?: string; role?: string }) => {
+    return api.patch<{ user: AdminUser }>(`/api/admin/users/${id}`, updates);
+  },
+  deleteUser: async (id: string) => {
+    return api.delete<{ message: string }>(`/api/admin/users/${id}`);
+  },
+  getTopics: async (limit = 50, offset = 0) => {
+    return api.get<{ topics: AdminTopic[]; limit: number; offset: number }>(`/api/admin/topics?limit=${limit}&offset=${offset}`);
+  },
+  deleteTopic: async (id: string) => {
+    return api.delete<{ message: string }>(`/api/admin/topics/${id}`);
+  },
+  getHealth: async () => {
+    return api.get<{ status: string; timestamp: string }>('/health');
+  },
+  getActivityLogs: async (limit = 50, offset = 0) => {
+    return api.get<{ logs: AdminActivityLog[]; limit: number; offset: number }>(`/api/admin/activity-logs?limit=${limit}&offset=${offset}`);
   },
 };
+
+export interface AdminUser {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  created_at: string;
+}
+
+export interface AdminTopic {
+  id: string;
+  title: string;
+  created_at: string;
+  creator_name: string | null;
+  member_count: string;
+  message_count: string;
+}
+
+export interface AdminActivityLog {
+  id: string;
+  admin_user_id: string | null;
+  action: string;
+  target_type: string;
+  target_id: string | null;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+  admin_name?: string | null;
+}
 
 // Message API
 export const messageApi = {

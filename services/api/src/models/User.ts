@@ -97,6 +97,51 @@ export const updateUser = async (id: string, updates: Partial<CreateUserData>): 
   return result.rows[0];
 };
 
+export interface AdminUserUpdate {
+  name?: string;
+  email?: string;
+  role?: 'user' | 'admin';
+}
+
+export const adminUpdateUser = async (id: string, updates: AdminUserUpdate): Promise<User> => {
+  const fields: string[] = [];
+  const values: unknown[] = [];
+  let paramCount = 1;
+
+  if (updates.name !== undefined && updates.name.trim()) {
+    fields.push(`name = $${paramCount++}`);
+    values.push(updates.name.trim());
+  }
+  if (updates.email !== undefined && updates.email.trim()) {
+    fields.push(`email = $${paramCount++}`);
+    values.push(updates.email.trim());
+  }
+  if (updates.role !== undefined && (updates.role === 'user' || updates.role === 'admin')) {
+    fields.push(`role = $${paramCount++}`);
+    values.push(updates.role);
+  }
+  if (fields.length === 0) throw new Error('No fields to update');
+
+  values.push(id);
+  const result = await query(
+    `UPDATE users SET ${fields.join(', ')}, updated_at = NOW()
+     WHERE id = $${paramCount}
+     RETURNING id, name, email, avatar_url, role, created_at, updated_at`,
+    values
+  );
+  return result.rows[0];
+};
+
+export const deleteUser = async (id: string): Promise<boolean> => {
+  const result = await query('DELETE FROM users WHERE id = $1', [id]);
+  return (result.rowCount ?? 0) > 0;
+};
+
+export const countUsersByRole = async (role: string): Promise<number> => {
+  const r = await query('SELECT COUNT(*) AS count FROM users WHERE role = $1', [role]);
+  return parseInt(r.rows[0]?.count as string, 10) || 0;
+};
+
 export const verifyUserPassword = async (email: string, password: string): Promise<User | null> => {
   const user = await getUserByEmail(email);
   
