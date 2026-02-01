@@ -9,10 +9,11 @@ export interface ApiResponse<T> {
 class ApiClient {
   private baseUrl: string;
   private token: string | null = null;
+  private csrfToken: string | null = null;
+  private csrfPromise: Promise<string> | null = null;
 
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
-    // Load token from localStorage
     if (typeof window !== 'undefined' && typeof localStorage?.getItem === 'function') {
       this.token = localStorage.getItem('studycollab_token');
     }
@@ -31,26 +32,49 @@ class ApiClient {
     return this.token;
   }
 
+  private async ensureCsrfToken(): Promise<string> {
+    if (this.csrfToken) return this.csrfToken;
+    if (this.csrfPromise) return this.csrfPromise;
+    this.csrfPromise = (async () => {
+      const r = await fetch(`${this.baseUrl}/api/csrf/token`, { method: 'GET' });
+      const j = await r.json();
+      if (!r.ok || !j?.csrfToken) {
+        throw new Error(j?.error || 'CSRF token unavailable');
+      }
+      this.csrfToken = j.csrfToken;
+      return this.csrfToken;
+    })();
+    return this.csrfPromise;
+  }
+
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseUrl}${endpoint}`;
+    const method = (options.method || 'GET').toUpperCase();
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...(options.headers as Record<string, string>),
     };
 
     if (this.token) {
-      headers['Authorization'] = `Bearer ${this.token}`;
+      (headers as Record<string, string>)['Authorization'] = `Bearer ${this.token}`;
+    }
+
+    if (method !== 'GET' && method !== 'HEAD') {
+      try {
+        const csrf = await this.ensureCsrfToken();
+        (headers as Record<string, string>)['X-CSRF-Token'] = csrf;
+      } catch (e: unknown) {
+        return {
+          error: e instanceof Error ? e.message : 'CSRF token unavailable',
+        };
+      }
     }
 
     try {
-      const response = await fetch(url, {
-        ...options,
-        headers,
-      });
-
+      const response = await fetch(url, { ...options, headers });
       const data = await response.json();
 
       if (!response.ok) {
@@ -60,9 +84,9 @@ class ApiClient {
       }
 
       return { data };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
-        error: error.message || 'Network error occurred',
+        error: error instanceof Error ? error.message : 'Network error occurred',
       };
     }
   }

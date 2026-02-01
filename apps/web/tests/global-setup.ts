@@ -13,9 +13,19 @@ const loginViaApi = async (email: string, password: string) => {
   const apiContext = await request.newContext({ baseURL: apiURL });
   const maxAttempts = 3;
 
+  let csrfToken: string | null = null;
+  const csrfRes = await apiContext.get('/api/csrf/token');
+  if (csrfRes.ok()) {
+    const j = await csrfRes.json();
+    csrfToken = (j as { csrfToken?: string }).csrfToken ?? null;
+  }
+
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const headers: Record<string, string> = {};
+    if (csrfToken) headers['X-CSRF-Token'] = csrfToken;
     const response = await apiContext.post('/api/auth/login', {
       data: { email, password },
+      headers: Object.keys(headers).length ? headers : undefined,
     });
     const bodyText = await response.text();
 

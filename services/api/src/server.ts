@@ -1,9 +1,8 @@
-import dotenv from 'dotenv';
+import 'dotenv/config';
+import './env'; // validate env and enforce production secrets
 import pool from './db/connection';
-import logger, { logInfo, logError } from './utils/logger';
+import { logInfo, logError } from './utils/logger';
 import app from './app';
-
-dotenv.config();
 
 const PORT = process.env.PORT || 3001;
 

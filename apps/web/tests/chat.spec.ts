@@ -1,6 +1,16 @@
 import { test, expect } from '@playwright/test';
 
 const baseURL = process.env.E2E_BASE_URL || 'http://localhost:3000';
+const apiUrl = process.env.E2E_API_URL || 'http://localhost:3001';
+
+async function getCsrfToken(
+  ctx: { get: (url: string) => Promise<{ ok: () => boolean; json: () => Promise<{ csrfToken?: string }> }> }
+): Promise<string | null> {
+  const r = await ctx.get(`${apiUrl}/api/csrf/token`);
+  if (!r.ok()) return null;
+  const j = await r.json();
+  return j.csrfToken ?? null;
+}
 
 test('chat message persists after reload', async ({ page }) => {
   await page.goto('/topics');
@@ -20,11 +30,14 @@ test('chat message persists after reload', async ({ page }) => {
     throw new Error('Missing topic id or token');
   }
 
+  const csrf = await getCsrfToken(page.request);
+  const headers: Record<string, string> = { Authorization: `Bearer ${token}` };
+  if (csrf) headers['X-CSRF-Token'] = csrf;
+
   const message = `E2E message ${Date.now()}`;
-  const apiUrl = process.env.E2E_API_URL || 'http://localhost:3001';
   const response = await page.request.post(`${apiUrl}/api/messages/topic/${topicId}`, {
     data: { content: message },
-    headers: { Authorization: `Bearer ${token}` },
+    headers,
   });
   expect(response.ok()).toBe(true);
 
@@ -60,12 +73,14 @@ test('presence and notification update', async ({ page, browser }) => {
   if (!adminToken) {
     throw new Error('Missing admin auth token');
   }
-  const apiUrl = process.env.E2E_API_URL || 'http://localhost:3001';
+  const adminCsrf = await getCsrfToken(adminPage.request);
+  const adminHeaders: Record<string, string> = { Authorization: `Bearer ${adminToken}` };
+  if (adminCsrf) adminHeaders['X-CSRF-Token'] = adminCsrf;
   const adminMessageResponse = await adminPage.request.post(
     `${apiUrl}/api/messages/topic/${roomHref.split('/').pop()}`,
     {
       data: { content: message },
-      headers: { Authorization: `Bearer ${adminToken}` },
+      headers: adminHeaders,
     }
   );
   expect(adminMessageResponse.ok()).toBe(true);

@@ -121,6 +121,17 @@ CREATE TABLE IF NOT EXISTS admin_activity_logs (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
+-- Audit Logs Table (auth + sensitive actions)
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  event_type VARCHAR(100) NOT NULL,
+  user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  ip VARCHAR(45),
+  user_agent TEXT,
+  metadata JSONB,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
 -- Indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_messages_topic_id ON messages(topic_id);
 CREATE INDEX IF NOT EXISTS idx_messages_user_id ON messages(user_id);
@@ -141,6 +152,9 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_user_sessions_user_id_unique ON user_sessi
 CREATE INDEX IF NOT EXISTS idx_token_blacklist_expires_at ON token_blacklist(expires_at);
 CREATE INDEX IF NOT EXISTS idx_admin_activity_logs_admin_user_id ON admin_activity_logs(admin_user_id);
 CREATE INDEX IF NOT EXISTS idx_admin_activity_logs_created_at ON admin_activity_logs(created_at);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_event_type ON audit_logs(event_type);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);
 CREATE INDEX IF NOT EXISTS idx_topics_search ON topics USING GIN (
   to_tsvector('english', coalesce(title, '') || ' ' || coalesce(description, ''))
 );

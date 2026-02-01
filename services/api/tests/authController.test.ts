@@ -5,6 +5,10 @@ vi.mock('../src/models/User', () => ({
   verifyUserPassword: vi.fn(),
 }));
 
+vi.mock('../src/models/AuditLog', () => ({
+  createAuditLog: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock('../src/utils/jwt', () => ({
   generateAccessToken: vi.fn(() => 'access-token'),
   generateRefreshToken: vi.fn(() => 'refresh-token'),
@@ -31,7 +35,11 @@ describe('authController', () => {
       role: 'user',
     });
 
-    const req: any = { body: { email: 'user@example.com', password: 'Password1' } };
+    const req: any = {
+      body: { email: 'user@example.com', password: 'Password1' },
+      headers: {},
+      socket: { remoteAddress: '127.0.0.1' },
+    };
     const res = mockResponse();
 
     await login(req, res);

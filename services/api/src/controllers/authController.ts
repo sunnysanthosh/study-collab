@@ -3,9 +3,19 @@ import { createUser, getUserByEmail, verifyUserPassword } from '../models/User';
 import jwt from 'jsonwebtoken';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken, TokenPayload } from '../utils/jwt';
 import { validatePasswordStrength } from '../utils/password';
-import { logError, logWarning, logInfo } from '../utils/logger';
+import { logError, logWarning } from '../utils/logger';
 import { CustomError } from '../middleware/errorHandler';
 import { blacklistToken, isTokenBlacklisted } from '../models/TokenBlacklist';
+import { createAuditLog } from '../models/AuditLog';
+
+const getClientIp = (req: Request): string | undefined => {
+  const h = req?.headers;
+  const xff = h && (h['x-forwarded-for'] as string);
+  const ip = xff ? xff.split(',')[0]?.trim() : (req?.socket as { remoteAddress?: string } | undefined)?.remoteAddress;
+  return ip || undefined;
+};
+const getClientUserAgent = (req: Request): string | undefined =>
+  req?.headers?.['user-agent'];
 
 const getTokenExpiry = (token: string): Date | undefined => {
   const decoded = jwt.decode(token) as { exp?: number } | null;
@@ -44,6 +54,14 @@ export const register = async (req: Request, res: Response) => {
     
     // Create user
     const user = await createUser({ name, email, password });
+
+    await createAuditLog({
+      eventType: 'auth_register_success',
+      userId: user.id,
+      ip: getClientIp(req),
+      userAgent: getClientUserAgent(req),
+      metadata: { email: user.email },
+    });
     
     // Generate tokens
     const tokenPayload: TokenPayload = {
@@ -90,8 +108,22 @@ export const login = async (req: Request, res: Response) => {
     // Verify credentials
     const user = await verifyUserPassword(email, password);
     if (!user) {
+      await createAuditLog({
+        eventType: 'auth_login_failure',
+        ip: getClientIp(req),
+        userAgent: getClientUserAgent(req),
+        metadata: { email: String(email).slice(0, 100) },
+      });
       return res.status(401).json({ error: 'Invalid email or password' });
     }
+
+    await createAuditLog({
+      eventType: 'auth_login_success',
+      userId: user.id,
+      ip: getClientIp(req),
+      userAgent: getClientUserAgent(req),
+      metadata: { email: user.email },
+    });
     
     // Generate tokens
     const tokenPayload: TokenPayload = {
@@ -136,6 +168,13 @@ export const refresh = async (req: Request, res: Response) => {
     
     // Verify refresh token
     const payload = verifyRefreshToken(refreshToken);
+
+    await createAuditLog({
+      eventType: 'auth_refresh',
+      userId: payload.userId,
+      ip: getClientIp(req),
+      userAgent: getClientUserAgent(req),
+    });
     
     // Generate new access token
     const newAccessToken = generateAccessToken({
@@ -168,6 +207,13 @@ export const logout = async (req: Request, res: Response) => {
     if (refreshToken) {
       await blacklistToken(refreshToken, 'refresh', getTokenExpiry(refreshToken));
     }
+
+    await createAuditLog({
+      eventType: 'auth_logout',
+      userId: req.user?.userId,
+      ip: getClientIp(req),
+      userAgent: getClientUserAgent(req),
+    });
 
     res.json({ message: 'Logout successful' });
   } catch (error) {

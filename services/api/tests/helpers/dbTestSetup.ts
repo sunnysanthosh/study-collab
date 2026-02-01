@@ -83,6 +83,8 @@ export const resetDb = async () => {
       topics,
       user_sessions,
       token_blacklist,
+      audit_logs,
+      admin_activity_logs,
       users
     RESTART IDENTITY CASCADE
   `);

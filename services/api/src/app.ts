@@ -3,6 +3,8 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { errorHandler } from './middleware/errorHandler';
 import { requestLogger } from './middleware/requestLogger';
+import { csrfProtection } from './middleware/csrf';
+import { sanitizeBody } from './middleware/sanitizeBody';
 import { authRoutes } from './routes/auth';
 import { userRoutes } from './routes/users';
 import { topicRoutes } from './routes/topics';
@@ -11,14 +13,19 @@ import { fileRoutes } from './routes/files';
 import { notificationRoutes } from './routes/notifications';
 import { logRoutes } from './routes/logs';
 import { adminRoutes } from './routes/admin';
+import { csrfRoutes } from './routes/csrf';
 import path from 'path';
 import rateLimit from 'express-rate-limit';
 
 const app = express();
 
-// Middleware
+// Security headers (XSS, etc.)
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
+  xssFilter: true,
+  ...(process.env.NODE_ENV === 'production' && {
+    hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
+  }),
 }));
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
@@ -26,6 +33,7 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(sanitizeBody);
 
 // Rate limiting
 const generalLimiter = rateLimit({
@@ -50,6 +58,9 @@ if (!disableRateLimit) {
 // Request logging (before routes)
 app.use(requestLogger);
 
+// CSRF protection for state-changing requests (POST/PUT/PATCH/DELETE)
+app.use(csrfProtection);
+
 // Serve uploaded files (must be before fileRoutes to handle static files)
 app.use('/api/files/uploads', express.static(path.join(process.cwd(), 'uploads'), {
   setHeaders: (res, filePath) => {
@@ -60,6 +71,7 @@ app.use('/api/files/uploads', express.static(path.join(process.cwd(), 'uploads')
 }));
 
 // Routes
+app.use('/api/csrf', csrfRoutes);
 app.use('/api/auth', disableRateLimit ? authRoutes : authLimiter, authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/topics', topicRoutes);
