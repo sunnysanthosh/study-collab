@@ -51,7 +51,8 @@ This document summarizes security measures implemented in StudyCollab.
 - **Rate limiting**: General and auth-specific limiters (can be disabled with `DISABLE_RATE_LIMIT` for tests).
 - **CORS**: Restricted to `FRONTEND_URL`.
 - **JWT**: Access and refresh tokens; blacklisting on logout.
-- **Admin**: Admin-only routes and activity logs for user/topic mutations.
+- **Admin**: Admin-only routes and activity logs for user/topic/message mutations and report resolution.
+- **Content moderation**: User reports, admin hide/delete messages; `content_reports` table; activity logs for `message_deleted_by_admin`, `message_hidden_by_admin`, `report_resolved`.
 
 ---
 

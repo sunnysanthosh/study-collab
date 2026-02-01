@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/Button';
 import { FileUpload } from '@/components/ui/FileUpload';
+import { Avatar } from '@/components/ui/Avatar';
 import { useSocket } from '@/hooks/useSocket';
 import { useParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
@@ -13,6 +14,7 @@ interface Message {
     id: string;
     user: string;
     avatar: string;
+    avatarUrl?: string | null;
     text: string;
     time: string;
     isOwn: boolean;
@@ -61,11 +63,13 @@ export function ChatInterface() {
             setLoadingMessages(true);
             try {
                 const response = await messageApi.getMessages(roomId, PAGE_SIZE, 0);
-                if (response.data?.messages) {
-                    const formattedMessages: Message[] = response.data.messages.map((msg: any) => ({
+                const data = response.data as { messages?: { id: string; user_name?: string; user_avatar?: string; content: string; created_at: string; user_id: string; edited_at?: string; reactions?: unknown[]; reaction_counts?: Record<string, number> }[] } | undefined;
+                if (data?.messages) {
+                    const formattedMessages: Message[] = data.messages.map((msg: any) => ({
                         id: msg.id,
                         user: msg.user_name || 'Unknown',
-                        avatar: msg.user_avatar || (msg.user_name?.charAt(0).toUpperCase() || '?'),
+                        avatar: msg.user_name?.charAt(0).toUpperCase() || '?',
+                        avatarUrl: msg.user_avatar,
                         text: msg.content,
                         time: msg.created_at,
                         isOwn: msg.user_id === userId,
@@ -92,11 +96,13 @@ export function ChatInterface() {
         setLoadingMessages(true);
         try {
             const response = await messageApi.getMessages(roomId, PAGE_SIZE, loadedCount);
-            if (response.data?.messages) {
-                const formattedMessages: Message[] = response.data.messages.map((msg: any) => ({
+            const data = response.data as { messages?: { id: string; user_name?: string; user_avatar?: string; content: string; created_at: string; user_id: string; edited_at?: string; reactions?: unknown[]; reaction_counts?: Record<string, number> }[] } | undefined;
+            if (data?.messages) {
+                const formattedMessages: Message[] = data.messages.map((msg: any) => ({
                     id: msg.id,
                     user: msg.user_name || 'Unknown',
-                    avatar: msg.user_avatar || (msg.user_name?.charAt(0).toUpperCase() || '?'),
+                    avatar: msg.user_name?.charAt(0).toUpperCase() || '?',
+                    avatarUrl: msg.user_avatar,
                     text: msg.content,
                     time: msg.created_at,
                     isOwn: msg.user_id === userId,
@@ -186,16 +192,31 @@ export function ChatInterface() {
         }
     };
 
+    const handleReport = async (messageId: string) => {
+        const reason = window.prompt('Optional: Describe why you are reporting this message');
+        try {
+            const res = await messageApi.reportMessage(messageId, reason || undefined);
+            if (res.error) {
+                showToast(res.error, 'error');
+            } else {
+                showToast('Message reported. Admins will review it.', 'success');
+            }
+        } catch (error) {
+            showToast('Failed to report message', 'error');
+        }
+    };
+
     const handleReaction = async (messageId: string, emoji: string) => {
         try {
             await messageApi.addReaction(messageId, emoji);
             // Reload reactions for this message
             const response = await messageApi.getReactions(messageId);
-            if (response.data?.reactions) {
+            const reactData = response.data as { reactions?: unknown[] } | undefined;
+            if (reactData?.reactions) {
                 setMessages((prev) =>
                     prev.map((msg) =>
                         msg.id === messageId
-                            ? { ...msg, reactions: response.data.reactions }
+                            ? { ...msg, reactions: reactData.reactions as any[] }
                             : msg
                     )
                 );
@@ -218,9 +239,10 @@ export function ChatInterface() {
             }
             
             // Create message with file link
-            const fileUrl = response.data.file.url.startsWith('http') 
-                ? response.data.file.url 
-                : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}${response.data.file.url}`;
+            const fileData = response.data as { file?: { url: string } };
+            const fileUrl = fileData?.file?.url?.startsWith('http') 
+                ? fileData.file.url 
+                : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}${fileData?.file?.url || ''}`;
             const messageContent = `📎 [${file.name}](${fileUrl})`;
             
             if (isConnected) {
@@ -326,21 +348,11 @@ export function ChatInterface() {
                             if (actions) actions.style.opacity = '0';
                         }}
                     >
-                        <div style={{ 
-                            width: '36px', 
-                            height: '36px', 
-                            borderRadius: '50%', 
-                            background: message.isOwn ? 'hsl(var(--primary))' : 'hsl(var(--secondary))', 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            justifyContent: 'center', 
-                            fontSize: '0.9rem', 
-                            fontWeight: 'bold',
-                            color: message.isOwn ? 'white' : 'black',
-                            flexShrink: 0
-                        }}>
-                            {message.avatar}
-                        </div>
+                        <Avatar
+                            src={message.avatarUrl ?? (message.avatar?.startsWith?.('http') || message.avatar?.startsWith?.('/') ? message.avatar : null)}
+                            fallback={message.avatar?.length === 1 ? message.avatar : message.user?.charAt(0) || '?'}
+                            size={36}
+                        />
                         <div style={{ 
                             flex: 1,
                             maxWidth: 'calc(100% - 50px)',
@@ -454,6 +466,23 @@ export function ChatInterface() {
                                             >
                                                 😀
                                             </button>
+                                            {!message.isOwn && (
+                                                <button
+                                                    onClick={() => handleReport(message.id)}
+                                                    style={{
+                                                        background: 'transparent',
+                                                        border: 'none',
+                                                        color: 'hsl(var(--warning))',
+                                                        cursor: 'pointer',
+                                                        padding: '0.25rem 0.5rem',
+                                                        fontSize: '0.8rem',
+                                                        borderRadius: 'var(--radius-sm)'
+                                                    }}
+                                                    title="Report message"
+                                                >
+                                                    🚩
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                     {message.reaction_counts && Object.keys(message.reaction_counts).length > 0 && (

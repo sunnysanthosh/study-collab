@@ -41,8 +41,9 @@ class ApiClient {
       if (!r.ok || !j?.csrfToken) {
         throw new Error(j?.error || 'CSRF token unavailable');
       }
-      this.csrfToken = j.csrfToken;
-      return this.csrfToken;
+      const token = String(j.csrfToken);
+      this.csrfToken = token;
+      return token;
     })();
     return this.csrfPromise;
   }
@@ -241,8 +242,14 @@ export const adminApi = {
   getStats: async () => {
     return api.get<{ stats: { totalUsers: number; activeTopics: number; pendingRequests: number; onlineNow: number; totalMessages: number } }>('/api/admin/stats');
   },
+  getAnalytics: async (days = 7) => {
+    return api.get<{ analytics: { usersByDay: { date: string; count: number }[]; topicsByDay: { date: string; count: number }[]; messagesByDay: { date: string; count: number }[]; days: number } }>(`/api/admin/analytics?days=${days}`);
+  },
   getUsers: async (limit = 50, offset = 0) => {
     return api.get<{ users: AdminUser[]; limit: number; offset: number }>(`/api/admin/users?limit=${limit}&offset=${offset}`);
+  },
+  createUser: async (data: { name: string; email: string; password: string; role?: string }) => {
+    return api.post<{ user: AdminUser }>('/api/admin/users', data);
   },
   updateUser: async (id: string, updates: { name?: string; email?: string; role?: string }) => {
     return api.patch<{ user: AdminUser }>(`/api/admin/users/${id}`, updates);
@@ -261,6 +268,19 @@ export const adminApi = {
   },
   getActivityLogs: async (limit = 50, offset = 0) => {
     return api.get<{ logs: AdminActivityLog[]; limit: number; offset: number }>(`/api/admin/activity-logs?limit=${limit}&offset=${offset}`);
+  },
+  getReports: async (limit = 50, offset = 0, status?: string) => {
+    const q = status ? `&status=${encodeURIComponent(status)}` : '';
+    return api.get<{ reports: AdminContentReport[]; limit: number; offset: number }>(`/api/admin/reports?limit=${limit}&offset=${offset}${q}`);
+  },
+  resolveReport: async (id: string, action: 'resolved' | 'dismissed') => {
+    return api.patch<{ report: AdminContentReport }>(`/api/admin/reports/${id}`, { action });
+  },
+  deleteMessage: async (id: string) => {
+    return api.delete<{ message: string }>(`/api/admin/messages/${id}`);
+  },
+  hideMessage: async (id: string) => {
+    return api.patch<{ message: AdminMessage }>(`/api/admin/messages/${id}/hide`, {});
   },
 };
 
@@ -292,6 +312,33 @@ export interface AdminActivityLog {
   admin_name?: string | null;
 }
 
+export interface AdminContentReport {
+  id: string;
+  reporter_id: string | null;
+  target_type: string;
+  target_id: string;
+  reason: string | null;
+  status: string;
+  resolved_by: string | null;
+  resolved_at: string | null;
+  created_at: string;
+  reporter_name?: string | null;
+  target_content?: string | null;
+  topic_id?: string | null;
+  topic_title?: string | null;
+  author_name?: string | null;
+}
+
+export interface AdminMessage {
+  id: string;
+  topic_id: string;
+  user_id: string;
+  content: string;
+  edited_at: string | null;
+  hidden_at: string | null;
+  created_at: string;
+}
+
 // Message API
 export const messageApi = {
   getMessages: async (topicId: string, limit = 50, offset = 0) => {
@@ -316,6 +363,10 @@ export const messageApi = {
 
   getReactions: async (messageId: string) => {
     return api.get(`/api/messages/${messageId}/reactions`);
+  },
+
+  reportMessage: async (messageId: string, reason?: string) => {
+    return api.post(`/api/messages/${messageId}/report`, { reason });
   },
 };
 

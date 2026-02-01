@@ -3,6 +3,7 @@ import { createClient, RedisClientType } from 'redis';
 const REDIS_CHANNEL = 'notification.created';
 const CSRF_PREFIX = 'csrf:';
 const CSRF_TTL_SEC = 900; // 15 min
+const CACHE_PREFIX = 'cache:';
 
 let client: RedisClientType | null = null;
 let connecting = false;
@@ -70,6 +71,45 @@ export const getCsrfToken = async (token: string): Promise<boolean> => {
     return v === '1';
   } catch (e) {
     console.error('Redis CSRF get failed:', e);
+    return false;
+  }
+};
+
+/** Cache layer for read-heavy API responses. Optional when REDIS_URL is set. */
+export const getCache = async <T>(key: string): Promise<T | null> => {
+  try {
+    const c = await getClient();
+    if (!c) return null;
+    const raw = await c.get(CACHE_PREFIX + key);
+    if (!raw) return null;
+    return JSON.parse(raw) as T;
+  } catch (e) {
+    console.error('Redis cache get failed:', e);
+    return null;
+  }
+};
+
+export const setCache = async (key: string, value: unknown, ttlSeconds: number): Promise<boolean> => {
+  try {
+    const c = await getClient();
+    if (!c) return false;
+    await c.setEx(CACHE_PREFIX + key, ttlSeconds, JSON.stringify(value));
+    return true;
+  } catch (e) {
+    console.error('Redis cache set failed:', e);
+    return false;
+  }
+};
+
+export const invalidateCache = async (pattern: string): Promise<boolean> => {
+  try {
+    const c = await getClient();
+    if (!c) return false;
+    const keys = await c.keys(CACHE_PREFIX + pattern);
+    if (keys.length > 0) await c.del(keys);
+    return true;
+  } catch (e) {
+    console.error('Redis cache invalidate failed:', e);
     return false;
   }
 };

@@ -4,6 +4,7 @@ import { MessageReactionModel } from '../models/MessageReaction';
 import { NotificationModel } from '../models/Notification';
 import { getTopicMembers } from '../models/TopicMember';
 import { getTopicById } from '../models/Topic';
+import { createReport, getReportsByTarget } from '../models/ContentReport';
 import { logError } from '../utils/logger';
 import { CustomError } from '../middleware/errorHandler';
 
@@ -189,5 +190,37 @@ export const getReactions = async (req: Request, res: Response) => {
     const { messageId } = req.params;
     logError(error as Error, { context: 'Get reactions', messageId });
     throw new CustomError('Failed to get reactions', 500, 'GET_REACTIONS_ERROR');
+  }
+};
+
+export const reportMessage = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) return res.status(401).json({ error: 'Authentication required' });
+
+    const { messageId } = req.params;
+    const { reason } = req.body;
+
+    const message = await getMessageById(messageId);
+    if (!message) return res.status(404).json({ error: 'Message not found' });
+
+    const existing = await getReportsByTarget('message', messageId);
+    const userReported = existing.some((r) => r.reporter_id === userId && r.status === 'pending');
+    if (userReported) {
+      return res.status(400).json({ error: 'You have already reported this message' });
+    }
+
+    const report = await createReport({
+      reporterId: userId,
+      targetType: 'message',
+      targetId: messageId,
+      reason: typeof reason === 'string' ? reason.trim().slice(0, 500) : undefined,
+    });
+
+    res.status(201).json({ report });
+  } catch (error) {
+    const { messageId } = req.params;
+    logError(error as Error, { context: 'Report message', messageId, userId: req.user?.userId });
+    throw new CustomError('Failed to report message', 500, 'REPORT_MESSAGE_ERROR');
   }
 };

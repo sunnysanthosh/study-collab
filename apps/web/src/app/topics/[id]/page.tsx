@@ -1,8 +1,13 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { Shell } from "@/components/layout/Shell";
-import { ChatInterface } from "@/components/collab/ChatInterface";
 import { ProblemBoard } from "@/components/collab/ProblemBoard";
+
+const ChatInterface = dynamic(
+  () => import('@/components/collab/ChatInterface').then((m) => ({ default: m.ChatInterface })),
+  { ssr: false, loading: () => <div style={{ padding: '2rem', textAlign: 'center', color: 'hsl(var(--muted-foreground))' }}>Loading chat...</div> }
+);
 
 export default function TopicRoom({ params }: { params: { id: string } }) {
     return (

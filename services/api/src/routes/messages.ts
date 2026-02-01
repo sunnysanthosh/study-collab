@@ -13,4 +13,5 @@ messageRoutes.put('/:messageId', MessageController.editMessage);
 messageRoutes.delete('/:messageId', MessageController.removeMessage);
 messageRoutes.post('/:messageId/reactions', MessageController.addReaction);
 messageRoutes.get('/:messageId/reactions', MessageController.getReactions);
+messageRoutes.post('/:messageId/report', MessageController.reportMessage);
 

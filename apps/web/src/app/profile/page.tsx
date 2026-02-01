@@ -26,8 +26,8 @@ export default function ProfilePage() {
     const loadProfile = async () => {
         try {
             const response = await userApi.getProfile();
-            if (response.data?.user) {
-                const userData = response.data.user;
+            const userData = (response.data as { user?: { name: string; email: string; avatar_url?: string } })?.user;
+            if (userData) {
                 setName(userData.name || '');
                 setEmail(userData.email || '');
                 setAvatar(userData.avatar_url || '');
@@ -53,8 +53,9 @@ export default function ProfilePage() {
                 return;
             }
             
-            if (response.data?.user) {
-                setUser(response.data.user);
+            const updatedUser = (response.data as { user?: { id: string; name: string; email: string; avatar_url?: string } })?.user;
+            if (updatedUser) {
+                setUser(updatedUser);
                 showToast('Profile updated successfully', 'success');
                 setIsEditing(false);
             }
@@ -97,11 +98,12 @@ export default function ProfilePage() {
                 return;
             }
 
-            if (response.data?.avatar_url) {
-                setAvatar(response.data.avatar_url);
+            const avatarData = response.data as { avatar_url?: string };
+            if (avatarData?.avatar_url) {
+                setAvatar(avatarData.avatar_url);
                 // Update user context
                 if (user) {
-                    setUser({ ...user, avatar_url: response.data.avatar_url });
+                    setUser({ ...user, avatar_url: avatarData.avatar_url });
                 }
                 showToast('Avatar updated successfully', 'success');
             }

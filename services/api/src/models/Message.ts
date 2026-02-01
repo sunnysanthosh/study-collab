@@ -6,6 +6,7 @@ export interface Message {
   user_id: string;
   content: string;
   edited_at: Date | null;
+  hidden_at: Date | null;
   created_at: Date;
 }
 
@@ -35,9 +36,11 @@ export const getMessagesByTopic = async (
   topicId: string,
   limit: number = 50,
   offset: number = 0,
-  order: 'asc' | 'desc' = 'asc'
+  order: 'asc' | 'desc' = 'asc',
+  includeHidden: boolean = false
 ): Promise<MessageWithUser[]> => {
   const direction = order === 'desc' ? 'DESC' : 'ASC';
+  const hiddenFilter = includeHidden ? '' : 'AND m.hidden_at IS NULL';
   const result = await query(
     `SELECT 
        m.id,
@@ -45,12 +48,13 @@ export const getMessagesByTopic = async (
        m.user_id,
        m.content,
        m.edited_at,
+       m.hidden_at,
        m.created_at,
        u.name as user_name,
        u.avatar_url as user_avatar
      FROM messages m
      LEFT JOIN users u ON m.user_id = u.id
-     WHERE m.topic_id = $1
+     WHERE m.topic_id = $1 ${hiddenFilter}
      ORDER BY m.created_at ${direction}
      LIMIT $2 OFFSET $3`,
     [topicId, limit, offset]
@@ -86,6 +90,22 @@ export const deleteMessage = async (id: string, userId: string): Promise<boolean
     [id, userId]
   );
   
+  return result.rowCount !== null && result.rowCount > 0;
+};
+
+export const adminHideMessage = async (id: string): Promise<Message | null> => {
+  const result = await query(
+    `UPDATE messages SET hidden_at = NOW() WHERE id = $1 AND hidden_at IS NULL RETURNING *`,
+    [id]
+  );
+  return (result.rows[0] as Message) || null;
+};
+
+export const adminDeleteMessage = async (id: string): Promise<boolean> => {
+  const result = await query(
+    `DELETE FROM messages WHERE id = $1`,
+    [id]
+  );
   return result.rowCount !== null && result.rowCount > 0;
 };
 

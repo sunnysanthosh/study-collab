@@ -22,6 +22,7 @@ const io = new Server(httpServer, {
     origin: process.env.FRONTEND_URL || 'http://localhost:3000',
     methods: ['GET', 'POST'],
   },
+  perMessageDeflate: true,
 });
 
 interface RoomUser {
@@ -103,31 +104,28 @@ const createMessageNotifications = async (topicId: string, senderId: string, con
   const topicResult = await pool.query('SELECT title FROM topics WHERE id = $1', [topicId]);
   const topicTitle = topicResult.rows[0]?.title || 'a topic';
   const membersResult = await pool.query(
-    'SELECT user_id FROM topic_members WHERE topic_id = $1',
-    [topicId]
+    'SELECT user_id FROM topic_members WHERE topic_id = $1 AND user_id != $2',
+    [topicId, senderId]
+  );
+  const recipients = membersResult.rows.map((r) => r.user_id);
+  if (recipients.length === 0) return;
+
+  const title = `New message in ${topicTitle}`;
+  const message = content.trim().slice(0, 140);
+  const link = `/topics/${topicId}`;
+
+  const insertResult = await pool.query(
+    `INSERT INTO notifications (user_id, type, title, message, link)
+     SELECT uid, 'message', $2, $3, $4
+     FROM unnest($1::uuid[]) AS uid
+     RETURNING *`,
+    [recipients, title, message, link]
   );
 
-  for (const row of membersResult.rows) {
-    if (row.user_id === senderId) continue;
-    const notificationResult = await pool.query(
-      `INSERT INTO notifications (user_id, type, title, message, link)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING *`,
-      [
-        row.user_id,
-        'message',
-        `New message in ${topicTitle}`,
-        content.trim().slice(0, 140),
-        `/topics/${topicId}`,
-      ]
-    );
-    const notification = notificationResult.rows[0];
-    const payload = { userId: notification.user_id, notification };
+  const payloads = insertResult.rows.map((n) => ({ userId: n.user_id, notification: n }));
+  for (const payload of payloads) {
     await publishNotificationEvent(payload);
-    await pool.query('SELECT pg_notify($1, $2)', [
-      'notification_created',
-      JSON.stringify(payload),
-    ]);
+    await pool.query('SELECT pg_notify($1, $2)', ['notification_created', JSON.stringify(payload)]);
   }
 };
 

@@ -1,16 +1,19 @@
 # Next Steps - StudyCollab Development Roadmap
 
-**Current Version:** v0.6.0  
-**Last Updated:** 2026-01-25  
-**Status:** Admin dashboard enhancements + activity logs complete; version complete
+**Current Version:** v0.8.0  
+**Last Updated:** 2026-02-01  
+**Status:** v0.8.0 released. Performance optimization complete.
 
 ---
 
 ## Current Status Summary
 
-### Completed (v0.6.0)
+### Completed (v0.7.0)
+- **Content moderation:** Report messages, admin hide/delete, content reports tab
+- **Admin create user:** POST /api/admin/users, Add User modal
+- **Analytics:** GET /api/admin/analytics, Recharts bar chart (users, topics, messages by day)
 - Advanced search + filtering (topic search, filters, sort by popularity, date range)
-- Admin dashboard: user CRUD, topic moderation, stats, system health, **activity logs**
+- Admin dashboard: user CRUD (including create), topic moderation, stats, system health, **activity logs**, **content reports**, **analytics**
 - PostgreSQL database integration
 - JWT authentication + token blacklist on logout
 - WebSocket message persistence + presence
@@ -24,20 +27,23 @@
 
 ## Prioritized Roadmap
 
-### Short Term (2–4 weeks)
+### Short Term (v0.8.0 — Performance Optimization) ✅
 1. ~~Advanced Search and Filtering~~ (done in v0.6.0)
-2. ~~Admin Dashboard Enhancements~~ (done in v0.6.0: user CRUD, topic moderation, stats, health, **activity logs**)
-3. Performance + Indexing (targeted)
-   - Add DB indexes for topic, message, and notification queries
-   - Measure API latency before/after
+2. ~~Admin Dashboard Enhancements~~ (done in v0.6.0)
+3. ~~**Performance Optimization**~~ (done in v0.8.0)
+   - [x] Add database indexing (audit + composite indexes)
+   - [x] Implement Redis caching
+   - [x] Implement message batching
+   - [x] Add WebSocket compression
+   - [x] Optimize frontend bundle size (dynamic imports)
+   - [x] Add image optimization (Avatar, next/image)
+   - [x] Implement lazy loading
 
-### Medium Term (v0.6–v0.7)
+### Medium Term (v0.8–v0.9)
 - Security enhancements (CSRF, input sanitization, XSS protection)
 - API documentation (OpenAPI/Swagger + examples)
 - Search expansion (ranking, analytics)
-- Redis caching where it benefits read-heavy routes
-
-### Long Term (v0.8+)
+### Long Term (v0.9+)
 - Collaboration upgrades (audio/video, whiteboard, code editor)
 - Mobile app (React Native + push notifications)
 - Analytics + insights (learning progress, engagement)
@@ -89,6 +95,7 @@
 
 ## Related Documentation
 
+- `PERFORMANCE_OPTIMIZATION.md` - v0.8.0 performance optimization plan
 - `VERSION_v0.6.md` - v0.6 release notes, test results, implementation activities
 - `VERSION_v0.5.md` - v0.5 release notes
 - `VERSION_v0.4.md` - v0.4 release notes

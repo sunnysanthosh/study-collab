@@ -74,7 +74,7 @@ export default function TopicsPage() {
             if (response.error) {
                 showToast(response.error, 'error');
             } else if (response.data) {
-                setTopics(response.data.topics || []);
+                setTopics(((response.data as { topics?: Topic[] }).topics) || []);
             }
         } catch (error) {
             console.error('Error loading topics:', error);
@@ -87,8 +87,9 @@ export default function TopicsPage() {
     const loadFavorites = async () => {
         try {
             const response = await topicApi.getFavorites();
-            if (response.data?.favorites) {
-                setFavoriteIds(new Set(response.data.favorites));
+            const data = response.data as { favorites?: string[] };
+            if (data?.favorites) {
+                setFavoriteIds(new Set(data.favorites));
             }
         } catch (error) {
             console.error('Error loading favorites:', error);

@@ -5,6 +5,59 @@ All notable changes to StudyCollab will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+---
+
+## [0.8.0] - 2026-02-01
+
+### Added (Performance Optimization)
+- **Database indexing:** Composite indexes for `messages(topic_id, created_at)`, `messages(topic_id) WHERE hidden_at IS NULL`, `notifications(user_id, read, created_at)`, `admin_activity_logs(created_at DESC)`
+- **Redis caching:** `getCache`, `setCache`, `invalidateCache` for topics list/detail, admin stats/analytics; cache invalidation on mutations
+- **Message batching:** WebSocket notification creation uses single `INSERT ... SELECT unnest(...)` instead of per-recipient inserts
+- **WebSocket compression:** `perMessageDeflate: true` for Socket.IO
+- **Frontend bundle:** Dynamic import for AdminAnalyticsChart (Recharts) and ChatInterface; lazy loading
+- **Image optimization:** Next.js Image with `remotePatterns` for API avatars; new `Avatar` component
+- **Lazy loading:** Dynamic imports for admin chart and topic room chat
+
+### Changed
+- Topic controller: `getTopic` uses `Promise.all` for members + messages; caching with TTL
+- Admin controller: stats and analytics cached; invalidation on admin mutations
+- ChatInterface: uses `Avatar` component for message avatars
+
+---
+
+## [0.7.0] - 2026-02-01
+
+### Added
+- **Content moderation**
+  - `content_reports` table; `messages.hidden_at` for soft hide
+  - `POST /api/messages/:id/report` – users report messages
+  - `GET /api/admin/reports` – list reports (filter by status)
+  - `PATCH /api/admin/reports/:id` – resolve/dismiss report
+  - `DELETE /api/admin/messages/:id` – admin delete message
+  - `PATCH /api/admin/messages/:id/hide` – admin hide message
+  - Report button (🚩) on non-own messages in chat
+  - Content reports tab on Admin Dashboard (Hide, Delete, Dismiss, Resolve)
+  - Admin activity logs for `message_deleted_by_admin`, `message_hidden_by_admin`, `report_resolved`
+- **Admin create user**
+  - `POST /api/admin/users` – create user (name, email, password, role)
+  - Add User modal and button on Admin Dashboard
+  - Activity log for `user_created`
+- **Admin analytics**
+  - `GET /api/admin/analytics?days=7|14|30` – daily counts (users, topics, messages)
+  - Analytics section with Recharts bar chart on Admin Dashboard
+
+### Changed
+- `getMessagesByTopic` filters out hidden messages by default
+- Admin dashboard loads reports and analytics in parallel
+
+### Testing
+- API: content moderation, admin create user, admin analytics controller tests
+- Frontend: AdminDashboard test updated for reports, analytics, create user mock
+
+---
+
 ## [0.6.0] - 2026-01-25
 
 ### Added

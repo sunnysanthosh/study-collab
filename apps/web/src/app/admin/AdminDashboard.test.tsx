@@ -16,6 +16,21 @@ vi.mock('@/lib/api', async (importOriginal) => {
       getTopics: vi.fn().mockResolvedValue({ data: { topics: [] } }),
       getHealth: vi.fn().mockResolvedValue({ data: { status: 'ok', timestamp: new Date().toISOString() } }),
       getActivityLogs: vi.fn().mockResolvedValue({ data: { logs: [] } }),
+      getReports: vi.fn().mockResolvedValue({ data: { reports: [] } }),
+      getAnalytics: vi.fn().mockResolvedValue({
+        data: {
+          analytics: {
+            usersByDay: [{ date: '2026-01-01', count: 1 }],
+            topicsByDay: [{ date: '2026-01-01', count: 1 }],
+            messagesByDay: [{ date: '2026-01-01', count: 5 }],
+            days: 7,
+          },
+        },
+      }),
+      resolveReport: vi.fn(),
+      deleteMessage: vi.fn(),
+      hideMessage: vi.fn(),
+      createUser: vi.fn(),
       updateUser: vi.fn(),
       deleteUser: vi.fn(),
       deleteTopic: vi.fn(),
@@ -23,9 +38,10 @@ vi.mock('@/lib/api', async (importOriginal) => {
   };
 });
 
-vi.mock('@/contexts/ToastContext', () => ({
-  useToast: () => ({ showToast: vi.fn() }),
-}));
+vi.mock('@/contexts/ToastContext', () => {
+  const showToast = vi.fn();
+  return { useToast: () => ({ showToast }) };
+});
 
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({ user: { id: 'admin-1', name: 'Admin', email: 'admin@example.com' } }),
@@ -33,6 +49,17 @@ vi.mock('@/contexts/AuthContext', () => ({
 
 vi.mock('@/components/layout/Shell', () => ({
   Shell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+}));
+
+vi.mock('recharts', () => ({
+  BarChart: () => <div data-testid="bar-chart">Analytics Chart</div>,
+  Bar: () => null,
+  XAxis: () => null,
+  YAxis: () => null,
+  CartesianGrid: () => null,
+  Tooltip: () => null,
+  Legend: () => null,
+  ResponsiveContainer: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
 vi.mock('next/navigation', () => ({
@@ -48,6 +75,8 @@ describe('AdminDashboard', () => {
     expect(await screen.findByText('System Health')).toBeInTheDocument();
     expect(await screen.findByText('admin@example.com')).toBeInTheDocument();
     expect(await screen.findByText('Topics')).toBeInTheDocument();
+    expect(await screen.findByText('Content reports')).toBeInTheDocument();
+    expect(await screen.findByText('Analytics')).toBeInTheDocument();
     expect(await screen.findByText('Activity logs')).toBeInTheDocument();
   });
 });

@@ -74,6 +74,7 @@ export const resetDb = async () => {
   const pool = (await import('../../src/db/connection')).default;
   await pool.query(`
     TRUNCATE TABLE
+      content_reports,
       message_reactions,
       messages,
       file_attachments,

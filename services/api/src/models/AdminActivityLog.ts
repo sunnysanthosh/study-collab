@@ -3,7 +3,12 @@ import { query } from '../db/connection';
 export type AdminLogAction =
   | 'user_updated'
   | 'user_deleted'
-  | 'topic_deleted';
+  | 'user_created'
+  | 'topic_deleted'
+  | 'message_reported'
+  | 'message_deleted_by_admin'
+  | 'message_hidden_by_admin'
+  | 'report_resolved';
 
 export interface AdminActivityLogRow {
   id: string;
@@ -19,7 +24,7 @@ export interface AdminActivityLogRow {
 export async function createAdminLog(params: {
   adminUserId: string;
   action: AdminLogAction;
-  targetType: 'user' | 'topic';
+  targetType: 'user' | 'topic' | 'message' | 'report';
   targetId: string;
   metadata?: Record<string, unknown>;
 }): Promise<void> {

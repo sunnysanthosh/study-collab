@@ -1,12 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   getAdminStats,
+  getAdminAnalytics,
+  createAdminUser,
   getAdminUsers,
   updateAdminUser,
   deleteAdminUser,
   getAdminTopics,
   deleteAdminTopic,
   getAdminActivityLogs,
+  getAdminReports,
+  resolveAdminReport,
+  deleteAdminMessage,
+  hideAdminMessage,
 } from '../src/controllers/adminController';
 
 vi.mock('../src/db/connection', () => ({
@@ -16,6 +22,7 @@ vi.mock('../src/db/connection', () => ({
 vi.mock('../src/models/User', () => ({
   getUserById: vi.fn(),
   getUserByEmail: vi.fn(),
+  adminCreateUser: vi.fn(),
   adminUpdateUser: vi.fn(),
   deleteUser: vi.fn(),
   countUsersByRole: vi.fn(),
@@ -32,6 +39,18 @@ vi.mock('../src/models/AdminActivityLog', () => ({
   getAdminActivityLogs: vi.fn(),
 }));
 
+vi.mock('../src/models/ContentReport', () => ({
+  getReportById: vi.fn(),
+  getAdminReportList: vi.fn(),
+  resolveReport: vi.fn(),
+}));
+
+vi.mock('../src/models/Message', () => ({
+  getMessageById: vi.fn(),
+  adminDeleteMessage: vi.fn(),
+  adminHideMessage: vi.fn(),
+}));
+
 const mockResponse = () => {
   const res: any = {};
   res.status = vi.fn().mockReturnValue(res);
@@ -42,6 +61,28 @@ const mockResponse = () => {
 describe('adminController', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it('getAdminAnalytics returns daily counts', async () => {
+    const { query } = await import('../src/db/connection');
+    (query as any)
+      .mockResolvedValueOnce({ rows: [{ date: '2026-01-01', count: '2' }] })
+      .mockResolvedValueOnce({ rows: [{ date: '2026-01-01', count: '1' }] })
+      .mockResolvedValueOnce({ rows: [{ date: '2026-01-01', count: '10' }] });
+
+    const req: any = { query: { days: '7' } };
+    const res = mockResponse();
+
+    await getAdminAnalytics(req, res);
+
+    expect(res.json).toHaveBeenCalledWith({
+      analytics: expect.objectContaining({
+        usersByDay: [{ date: '2026-01-01', count: 2 }],
+        topicsByDay: [{ date: '2026-01-01', count: 1 }],
+        messagesByDay: [{ date: '2026-01-01', count: 10 }],
+        days: 7,
+      }),
+    });
   });
 
   it('returns stats counts including totalMessages', async () => {
@@ -65,6 +106,32 @@ describe('adminController', () => {
         onlineNow: 3,
         totalMessages: 10,
       },
+    });
+  });
+
+  it('createAdminUser creates user and logs activity', async () => {
+    const User = await import('../src/models/User');
+    (User.getUserByEmail as any).mockResolvedValue(null);
+    (User.adminCreateUser as any).mockResolvedValue({
+      id: 'u2',
+      name: 'New User',
+      email: 'new@example.com',
+      role: 'user',
+      created_at: new Date().toISOString(),
+    });
+
+    const req: any = {
+      params: {},
+      user: { userId: 'u1' },
+      body: { name: 'New User', email: 'new@example.com', password: 'Password123!', role: 'user' },
+    };
+    const res = mockResponse();
+
+    await createAdminUser(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.json).toHaveBeenCalledWith({
+      user: expect.objectContaining({ id: 'u2', name: 'New User', email: 'new@example.com', role: 'user' }),
     });
   });
 
@@ -221,6 +288,98 @@ describe('adminController', () => {
       ],
       limit: 20,
       offset: 0,
+    });
+  });
+
+  it('getAdminReports returns paginated reports', async () => {
+    const ContentReport = await import('../src/models/ContentReport');
+    (ContentReport.getAdminReportList as any).mockResolvedValue([
+      {
+        id: 'r1',
+        reporter_id: 'u1',
+        target_type: 'message',
+        target_id: 'm1',
+        reason: 'spam',
+        status: 'pending',
+        reporter_name: 'Alice',
+        target_content: 'Bad message',
+        topic_title: 'Calc',
+      },
+    ]);
+
+    const req: any = { query: { limit: '20', offset: '0' } };
+    const res = mockResponse();
+
+    await getAdminReports(req, res);
+
+    expect(res.json).toHaveBeenCalledWith({
+      reports: [
+        expect.objectContaining({ id: 'r1', status: 'pending', reporter_name: 'Alice' }),
+      ],
+      limit: 20,
+      offset: 0,
+    });
+  });
+
+  it('resolveAdminReport resolves pending report', async () => {
+    const ContentReport = await import('../src/models/ContentReport');
+    (ContentReport.getReportById as any).mockResolvedValue({
+      id: 'r1',
+      target_id: 'm1',
+      status: 'pending',
+    });
+    (ContentReport.resolveReport as any).mockResolvedValue({
+      id: 'r1',
+      status: 'resolved',
+    });
+
+    const req: any = { params: { id: 'r1' }, user: { userId: 'u1' }, body: { action: 'resolved' } };
+    const res = mockResponse();
+
+    await resolveAdminReport(req, res);
+
+    expect(res.json).toHaveBeenCalledWith({
+      report: expect.objectContaining({ id: 'r1', status: 'resolved' }),
+    });
+  });
+
+  it('deleteAdminMessage deletes message', async () => {
+    const Message = await import('../src/models/Message');
+    (Message.getMessageById as any).mockResolvedValue({
+      id: 'm1',
+      topic_id: 't1',
+      content: 'Test message',
+    });
+    (Message.adminDeleteMessage as any).mockResolvedValue(true);
+
+    const req: any = { params: { id: 'm1' }, user: { userId: 'u1' } };
+    const res = mockResponse();
+
+    await deleteAdminMessage(req, res);
+
+    expect(res.json).toHaveBeenCalledWith({ message: 'Message deleted' });
+  });
+
+  it('hideAdminMessage hides message', async () => {
+    const Message = await import('../src/models/Message');
+    (Message.getMessageById as any).mockResolvedValue({
+      id: 'm1',
+      topic_id: 't1',
+      content: 'Test message',
+      hidden_at: null,
+    });
+    (Message.adminHideMessage as any).mockResolvedValue({
+      id: 'm1',
+      hidden_at: new Date().toISOString(),
+    });
+
+    const req: any = { params: { id: 'm1' }, user: { userId: 'u1' } };
+    const res = mockResponse();
+
+    await hideAdminMessage(req, res);
+
+    expect(res.json).toHaveBeenCalledWith({
+      message: expect.objectContaining({ id: 'm1', hidden_at: expect.any(String) }),
     });
   });
 });

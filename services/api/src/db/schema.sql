@@ -53,6 +53,7 @@ CREATE TABLE IF NOT EXISTS messages (
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   content TEXT NOT NULL,
   edited_at TIMESTAMP,
+  hidden_at TIMESTAMP,
   created_at TIMESTAMP DEFAULT NOW()
 );
 
@@ -132,6 +133,22 @@ CREATE TABLE IF NOT EXISTS audit_logs (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
+-- Content Reports Table (user-reported messages)
+CREATE TABLE IF NOT EXISTS content_reports (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  reporter_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  target_type VARCHAR(50) NOT NULL DEFAULT 'message',
+  target_id UUID NOT NULL,
+  reason VARCHAR(500),
+  status VARCHAR(50) DEFAULT 'pending',
+  resolved_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  resolved_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Add hidden_at to messages if missing (idempotent for existing DBs)
+ALTER TABLE messages ADD COLUMN IF NOT EXISTS hidden_at TIMESTAMP;
+
 -- Indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_messages_topic_id ON messages(topic_id);
 CREATE INDEX IF NOT EXISTS idx_messages_user_id ON messages(user_id);
@@ -158,6 +175,15 @@ CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);
 CREATE INDEX IF NOT EXISTS idx_topics_search ON topics USING GIN (
   to_tsvector('english', coalesce(title, '') || ' ' || coalesce(description, ''))
 );
+CREATE INDEX IF NOT EXISTS idx_content_reports_target ON content_reports(target_type, target_id);
+CREATE INDEX IF NOT EXISTS idx_content_reports_status ON content_reports(status);
+CREATE INDEX IF NOT EXISTS idx_content_reports_created_at ON content_reports(created_at);
+
+-- Composite indexes for common query patterns (v0.8.0 perf)
+CREATE INDEX IF NOT EXISTS idx_messages_topic_created ON messages(topic_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_messages_topic_visible ON messages(topic_id) WHERE hidden_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_notifications_user_read_created ON notifications(user_id, read, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_admin_activity_logs_created_desc ON admin_activity_logs(created_at DESC);
 
 -- Function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()

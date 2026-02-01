@@ -73,8 +73,9 @@ export function NotificationCenter() {
         try {
             setLoading(true);
             const response = await notificationApi.getNotifications(50, 0);
-            if (response.data?.notifications) {
-                setNotifications(response.data.notifications);
+            const data = response.data as { notifications?: Notification[] } | undefined;
+            if (data?.notifications) {
+                setNotifications(data.notifications);
             }
         } catch (error) {
             console.error('Failed to load notifications:', error);
@@ -86,8 +87,9 @@ export function NotificationCenter() {
     const loadUnreadCount = async () => {
         try {
             const response = await notificationApi.getUnreadCount();
-            if (response.data?.count !== undefined) {
-                setUnreadCount(response.data.count);
+            const data = response.data as { count?: number } | undefined;
+            if (data?.count !== undefined) {
+                setUnreadCount(data.count);
             }
         } catch (error) {
             console.error('Failed to load unread count:', error);

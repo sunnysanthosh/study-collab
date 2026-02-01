@@ -1,16 +1,18 @@
 import { Request, Response } from 'express';
+import crypto from 'crypto';
 import * as TopicModel from '../models/Topic';
 import * as TopicMemberModel from '../models/TopicMember';
 import * as MessageModel from '../models/Message';
 import { TopicFavoriteModel } from '../models/TopicFavorite';
 import { logError } from '../utils/logger';
 import { CustomError } from '../middleware/errorHandler';
+import { getCache, setCache, invalidateCache } from '../utils/redis';
 
 export const getTopics = async (req: Request, res: Response) => {
   try {
     const { search, subject, difficulty, category, tags, limit, offset, sort, order, created_from, created_to } = req.query;
-    
-    const filters: any = {};
+
+    const filters: Record<string, unknown> = {};
     if (search) filters.search = search as string;
     if (subject) filters.subject = subject as string;
     if (difficulty) filters.difficulty = difficulty as string;
@@ -19,32 +21,32 @@ export const getTopics = async (req: Request, res: Response) => {
       const tagList = Array.isArray(tags)
         ? (tags as string[])
         : String(tags).split(',').map((tag) => tag.trim()).filter(Boolean);
-      if (tagList.length > 0) {
-        filters.tags = tagList;
-      }
+      if (tagList.length > 0) filters.tags = tagList;
     }
     if (limit) filters.limit = Math.min(parseInt(limit as string, 10) || 50, 100);
     if (offset) filters.offset = Math.max(parseInt(offset as string, 10) || 0, 0);
     if (sort && (sort === 'created_at' || sort === 'title' || sort === 'popularity')) filters.sort = sort;
     if (order && (order === 'asc' || order === 'desc')) filters.order = order;
-    if (created_from && !Number.isNaN(Date.parse(String(created_from)))) {
-      filters.createdFrom = String(created_from);
-    }
-    if (created_to && !Number.isNaN(Date.parse(String(created_to)))) {
-      filters.createdTo = String(created_to);
-    }
-    
+    if (created_from && !Number.isNaN(Date.parse(String(created_from)))) filters.createdFrom = String(created_from);
+    if (created_to && !Number.isNaN(Date.parse(String(created_to)))) filters.createdTo = String(created_to);
+
+    const cacheKey = `topics:${crypto.createHash('sha256').update(JSON.stringify(filters)).digest('hex').slice(0, 24)}`;
+    const cached = await getCache<{ topics: unknown[]; count: number; limit: number; offset: number }>(cacheKey);
+    if (cached) return res.json(cached);
+
     const topics = await TopicModel.getAllTopics(filters);
-    
-    res.json({
+
+    const payload = {
       topics,
       count: topics.length,
       limit: filters.limit ?? 50,
       offset: filters.offset ?? 0,
-    });
+    };
+    await setCache(cacheKey, payload, 60);
+    res.json(payload);
   } catch (error) {
-    logError(error as Error, { context: 'Topic operation' }); throw new CustomError('Operation failed', 500, 'TOPIC_ERROR');
-    res.status(500).json({ error: 'Failed to get topics' });
+    logError(error as Error, { context: 'Topic operation' });
+    throw new CustomError('Operation failed', 500, 'TOPIC_ERROR');
   }
 };
 
@@ -70,10 +72,10 @@ export const createTopic = async (req: Request, res: Response) => {
       tags: Array.isArray(tags) ? tags : undefined,
       created_by: userId,
     });
-    
-    // Automatically add creator as member
+
     await TopicMemberModel.addMemberToTopic(topic.id, userId);
-    
+    await invalidateCache('topics:*');
+
     res.status(201).json(topic);
   } catch (error) {
     logError(error as Error, { context: 'Create topic', userId: req.user?.userId });
@@ -84,24 +86,25 @@ export const createTopic = async (req: Request, res: Response) => {
 export const getTopic = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    
+
+    const cacheKey = `topic:${id}`;
+    const cached = await getCache<Record<string, unknown>>(cacheKey);
+    if (cached) return res.json(cached);
+
     const topic = await TopicModel.getTopicById(id);
-    
+
     if (!topic) {
       return res.status(404).json({ error: 'Topic not found' });
     }
-    
-    // Get members
-    const members = await TopicMemberModel.getTopicMembers(id);
-    
-    // Get messages
-    const messages = await MessageModel.getMessagesByTopic(id, 50, 0, 'desc');
-    
-    res.json({
-      ...topic,
-      members,
-      messages: messages.reverse(),
-    });
+
+    const [members, messages] = await Promise.all([
+      TopicMemberModel.getTopicMembers(id),
+      MessageModel.getMessagesByTopic(id, 50, 0, 'desc'),
+    ]);
+
+    const payload = { ...topic, members, messages: messages.reverse() };
+    await setCache(cacheKey, payload, 30);
+    res.json(payload);
   } catch (error) {
     const { id } = req.params;
     logError(error as Error, { context: 'Get topic', topicId: id });
@@ -129,7 +132,9 @@ export const updateTopic = async (req: Request, res: Response) => {
     }
     
     const updatedTopic = await TopicModel.updateTopic(id, req.body);
-    
+    await invalidateCache('topics:*');
+    await invalidateCache(`topic:${id}`);
+
     res.json(updatedTopic);
   } catch (error) {
     const { id } = req.params;
@@ -158,7 +163,9 @@ export const deleteTopic = async (req: Request, res: Response) => {
     }
     
     await TopicModel.deleteTopic(id);
-    
+    await invalidateCache('topics:*');
+    await invalidateCache(`topic:${id}`);
+
     res.json({ message: 'Topic deleted successfully' });
   } catch (error) {
     const { id } = req.params;

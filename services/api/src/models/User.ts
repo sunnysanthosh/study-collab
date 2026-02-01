@@ -21,14 +21,35 @@ export interface CreateUserData {
 
 export const createUser = async (userData: CreateUserData): Promise<User> => {
   const passwordHash = await hashPassword(userData.password);
-  
+
   const result = await query(
     `INSERT INTO users (name, email, password_hash, avatar_url)
      VALUES ($1, $2, $3, $4)
      RETURNING id, name, email, avatar_url, role, created_at, updated_at`,
     [userData.name, userData.email, passwordHash, userData.avatar_url || null]
   );
-  
+
+  return result.rows[0];
+};
+
+export interface AdminCreateUserData {
+  name: string;
+  email: string;
+  password: string;
+  role?: 'user' | 'admin';
+}
+
+export const adminCreateUser = async (userData: AdminCreateUserData): Promise<User> => {
+  const passwordHash = await hashPassword(userData.password);
+  const role = userData.role === 'admin' ? 'admin' : 'user';
+
+  const result = await query(
+    `INSERT INTO users (name, email, password_hash, role)
+     VALUES ($1, $2, $3, $4)
+     RETURNING id, name, email, avatar_url, role, created_at, updated_at`,
+    [userData.name.trim(), userData.email.trim(), passwordHash, role]
+  );
+
   return result.rows[0];
 };
 

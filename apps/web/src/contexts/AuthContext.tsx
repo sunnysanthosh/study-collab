@@ -14,6 +14,7 @@ interface User {
 
 interface AuthContextType {
     user: User | null;
+    setUser: (user: User | null) => void;
     isAuthenticated: boolean;
     login: (email: string, password: string) => Promise<boolean>;
     register: (name: string, email: string, password: string) => Promise<boolean>;
@@ -187,6 +188,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         <AuthContext.Provider
             value={{
                 user,
+                setUser,
                 isAuthenticated: !!user,
                 login,
                 register,
